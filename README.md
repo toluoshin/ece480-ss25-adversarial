@@ -26,7 +26,7 @@ git clone https://github.com/mchapaton/adversarial-attack.git
 cd adversarial-attack
 
 # Install required dependencies
-pip install tensorflow numpy matplotlib pillow
+pip3 install tensorflow numpy matplotlib pillow
 
 # Run the program
 python main.py
