@@ -9,24 +9,24 @@ from adversarial import create_adversarial_example, create_adversarial_example_s
 from drawing import get_drawn_digit
 
 
-def get_sample_by_digit(x_test, y_test, target_digit):
+def get_sample_by_digit(x_test, y_test, source_digit):
     """
     Get a sample image of the specified digit from the test set.
 
     Parameters:
     x_test (numpy.ndarray): The test images dataset
     y_test (numpy.ndarray): The test labels dataset
-    target_digit (int): The digit to find (0-9)
+    source_digit (int): The digit to find (0-9)
 
     Returns:
     tuple: (sample_image, sample_label) where sample_image is the first instance
            of the target digit found in the test set
     """
     # Find all indices where the label matches the target digit
-    digit_indices = np.where(y_test == target_digit)[0]
+    digit_indices = np.where(y_test == source_digit)[0]
 
     if len(digit_indices) == 0:
-        raise ValueError(f"No instances of digit {target_digit} found")
+        raise ValueError(f"No instances of digit {source_digit} found")
 
     # Select random index instead of first one
     sample_idx = np.random.choice(digit_indices)
@@ -168,7 +168,7 @@ def plot_confidence_text(min_epsilon_predictions, min_topn_predictions):
 def plot_success_rate(success_rates, block=False):
     # Convert success rates to a format that can be plotted
     epsilon_values = np.arange(0.1, 1.1, 0.1)
-    top_n_values = range(5, 101, 5)
+    top_n_values = range(5, 201, 5)
 
     success_matrix = np.zeros((len(top_n_values), len(epsilon_values)))
 
@@ -197,7 +197,7 @@ def plot_success_rate(success_rates, block=False):
     plt.show(block=block)
 
 
-def plot_min_success_cases(success_rates, model, original_image, original_label):
+def plot_min_success_cases(success_rates, model, original_image, original_label, target_label):
     """
     Plot two cases:
     1. Minimum epsilon required for a successful adversarial attack
@@ -227,9 +227,9 @@ def plot_min_success_cases(success_rates, model, original_image, original_label)
     min_top_n_epsilon, min_top_n = min_top_n_case
 
     # Generate adversarial images for the two cases
-    min_epsilon_adv_image = create_adversarial_example_saliency(model, original_image, original_label, min_epsilon,
+    min_epsilon_adv_image = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_epsilon,
                                                                 min_epsilon_top_n)
-    min_top_n_adv_image = create_adversarial_example_saliency(model, original_image, original_label, min_top_n_epsilon,
+    min_top_n_adv_image = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_top_n_epsilon,
                                                               min_top_n)
 
     # Convert tensors to numpy arrays for plotting
@@ -328,13 +328,20 @@ def interactive_adversarial_demo():
 
         if choice == '1':
             try:
-                target_digit = int(input("\nEnter a digit (0-9) to generate an adversarial example for: "))
-                if target_digit < 0 or target_digit > 9:
+                # get the requested source digit
+                source_digit = int(input("\nEnter a digit (0-9) to generate an adversarial example for: "))
+                if source_digit < 0 or source_digit > 9:
                     print("Please enter a valid digit between 0 and 9")
                     continue
 
+                # get the rqeuested target class
+                target_label = int(input("\nEnter a digit (0-9) to force misclassification to: "))
+                if target_label < 0 or target_label > 9:
+                    print("Please enter a valid digit between 0 and 9")
+                    continue
+                
                 # Get a sample image of the requested digit
-                sample_image, sample_label = get_sample_by_digit(x_test, y_test, target_digit)
+                sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
 
                 original_pred, original_probs = predict_sample(model, sample_image)
                 print("\nOriginal Prediction:")
@@ -347,23 +354,23 @@ def interactive_adversarial_demo():
                 # Iterate over epsilon and top N values
                 success_rates = []
                 for epsilon in np.arange(0.1, 1.1, 0.1):
-                    for top_n in range(5, 101, 5):
+                    for top_n in range(5, 201, 5):
                         print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
                         adversarial_image = create_adversarial_example_saliency(model, sample_image, sample_label,
-                                                                                epsilon, top_n)
+                                                                                [target_label], epsilon, top_n)
 
                         # Get prediction for adversarial image
                         original_pred, original_probs = predict_sample(model, sample_image)
                         adv_pred, adv_probs = predict_sample(model, adversarial_image)
 
-                        success = 1 if adv_pred != original_pred else 0
+                        success = 1 if adv_pred == target_label else 0
                         success_rates.append((epsilon, top_n, success))
-
+            
                 # Plot success rate heatmap first, with block=False
                 plot_success_rate(success_rates, block=False)
 
                 # Plot minimum success cases second, with block=True
-                plot_min_success_cases(success_rates, model, sample_image, sample_label)
+                plot_min_success_cases(success_rates, model, sample_image, sample_label, [target_label])
 
                 # Keep both windows open until any key is pressed
                 plt.show()
@@ -385,6 +392,12 @@ def interactive_adversarial_demo():
                 else:
                     print("Invalid choice.")
                     continue
+                
+                # get the rqeuested target class
+                target_label = int(input("\nEnter a digit (0-9) to force misclassification to: "))
+                if target_label < 0 or target_label > 9:
+                    print("Please enter a valid digit between 0 and 9")
+                    continue
 
                 # Get prediction for original image
                 original_pred, original_probs = predict_sample(model, processed_image)
@@ -398,23 +411,24 @@ def interactive_adversarial_demo():
                 # Iterate over epsilon and top N values
                 success_rates = []
                 for epsilon in np.arange(0.1, 1.1, 0.1):
-                    for top_n in range(5, 101, 5):
+                    for top_n in range(5, 201, 5):
                         print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
                         adversarial_image = create_adversarial_example_saliency(model, processed_image,
-                                                                                np.array([original_pred]), epsilon,
+                                                                                np.array([original_pred]), [target_label], epsilon,
                                                                                 top_n)
 
                         # Get prediction for adversarial image
                         adv_pred, adv_probs = predict_sample(model, adversarial_image)
 
-                        success = 1 if adv_pred != original_pred else 0
+                        #success = 1 if adv_pred != original_pred else 0
+                        success = 1 if adv_pred == target_label else 0
                         success_rates.append((epsilon, top_n, success))
 
                 # Plot success rate heatmap first, with block=False
                 plot_success_rate(success_rates, block=False)
 
                 # Plot minimum success cases second, with block=True
-                plot_min_success_cases(success_rates, model, processed_image, np.array([original_pred]))
+                plot_min_success_cases(success_rates, model, processed_image, np.array([original_pred]), [target_label])
 
                 # Keep both windows open until any key is pressed
                 plt.show()
@@ -423,23 +437,29 @@ def interactive_adversarial_demo():
                 print(f"Error processing image: {str(e)}")
 
         elif choice == '3':
-            # Select target digit and epsilon value
+            # Select source digit and epsilon value
             try:
-                target_digit = int(input("\nEnter a digit (0-9) to generate an adversarial example for: "))
-                if target_digit < 0 or target_digit > 9:
+                source_digit = int(input("\nEnter a digit (0-9) to generate an adversarial example for: "))
+                if source_digit < 0 or source_digit > 9:
+                    print("Please enter a valid digit between 0 and 9")
+                    continue
+
+                # get the rqeuested target class
+                target_label = int(input("\nEnter a digit (0-9) to force misclassification to: "))
+                if target_label < 0 or target_label > 9:
                     print("Please enter a valid digit between 0 and 9")
                     continue
 
                 # Get a sample image of the requested digit
-                sample_image, sample_label = get_sample_by_digit(x_test, y_test, target_digit)
+                sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
 
                 # Set epsilon value
                 epsilon = float(input("Enter epsilon value for perturbation (0.1-0.3 recommended): "))
 
                 # Saliency map
                 top_n = int(input("Enter the number of top N pixels to perturb: "))
-                print(f"\nGenerating adversarial example for digit: {target_digit} using Saliency map")
-                adversarial_image = create_adversarial_example_saliency(model, sample_image, sample_label, epsilon,
+                print(f"\nGenerating adversarial example for digit: {source_digit} using Saliency map")
+                adversarial_image = create_adversarial_example_saliency(model, sample_image, sample_label, [target_label], epsilon,
                                                                         top_n)
 
                 # Get predictions
@@ -460,8 +480,8 @@ def interactive_adversarial_demo():
                     print(f"Digit {digit}: {prob * 100:.2f}%")
 
                 # Add success/failure message
-                if adv_pred != original_pred:
-                    print(f"\nSuccess! Model was fooled: {target_digit} → {adv_pred}")
+                if adv_pred == target_label:
+                    print(f"\nSuccess! Model was fooled: {source_digit} → {target_label}")
                 else:
                     print("\nThe model wasn't fooled. Try increasing epsilon or top N.")
 
@@ -486,6 +506,12 @@ def interactive_adversarial_demo():
                 else:
                     print("Invalid choice.")
                     continue
+                
+                # get the rqeuested target class
+                target_label = int(input("\nEnter a digit (0-9) to force misclassification to: "))
+                if target_label < 0 or target_label > 9:
+                    print("Please enter a valid digit between 0 and 9")
+                    continue
 
                 # Get prediction for original image
                 pred, probs = predict_sample(model, processed_image)
@@ -503,7 +529,7 @@ def interactive_adversarial_demo():
                 # Saliency Map
                 top_n = int(input("Enter the number of top N pixels to perturb: "))
                 adversarial_image = create_adversarial_example_saliency(model, processed_image, np.array([pred]),
-                                                                        epsilon, top_n)
+                                                                        [target_label], epsilon, top_n)
 
                 # Get prediction for adversarial image
                 adv_pred, adv_probs = predict_sample(model, adversarial_image)
