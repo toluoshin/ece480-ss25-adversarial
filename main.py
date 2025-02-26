@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import tkinter as tk
 from PIL import Image
 import io
 from train_model import train_model
@@ -527,5 +528,28 @@ def interactive_adversarial_demo():
         else:
             print("Invalid choice. Please try again.")
 
+def main():
+    root = tk.Tk()
+    root.title("Adversarial Attack")
+    root.geometry("800x450")  # Width x Height
+
+    label = tk.Label(root, text="Choose Input Option:", font=("Arial", 14))
+    label.pack(pady=20)
+
+    def option_selected(option):
+        print(f"Option {option} selected")
+
+    options = [
+        "MNIST digits with Saliency map (iterate epsilon and top N)",
+        "Uploaded image with Saliency map (iterate epsilon and top N)",
+        "MNIST digits with Saliency map (specify epsilon and top N)",
+        "Uploaded image with Saliency map (specify epsilon and top N)"
+    ]
+    for i, option in enumerate(options, 1):
+        button = tk.Button(root, text=option, command=lambda opt=i: option_selected(opt))
+        button.pack(pady=5)
+
+    root.mainloop()
+
 if __name__ == "__main__":
-    interactive_adversarial_demo()
+    main()
