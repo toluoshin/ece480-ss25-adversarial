@@ -10,6 +10,7 @@ def create_adversarial_example(model, input_image, input_label, epsilon=0.1):
         prediction = model(input_image)
         loss = tf.keras.losses.sparse_categorical_crossentropy(input_label, prediction)
 
+    #print(input_label)
     gradient = tape.gradient(loss, input_image)
     signed_grad = tf.sign(gradient)
     adversarial_example = input_image + epsilon * signed_grad
@@ -17,14 +18,23 @@ def create_adversarial_example(model, input_image, input_label, epsilon=0.1):
 
     return adversarial_example
 
-def create_adversarial_example_saliency(model, input_image, input_label, epsilon=0.1, top_n=5):
+def create_adversarial_example_saliency(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
     input_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
     input_label = tf.convert_to_tensor(input_label, dtype=tf.int64)
+
+
+    # try to drive to desired target class
+    output_label = tf.convert_to_tensor(target_label, dtype=tf.int64)
+    # print(input_label)
+    # print(output_label)
 
     with tf.GradientTape() as tape:
         tape.watch(input_image)
         prediction = model(input_image)
-        loss = tf.keras.losses.sparse_categorical_crossentropy(input_label, prediction)
+        #loss = tf.keras.losses.sparse_categorical_crossentropy(input_label, prediction)
+        loss = -tf.keras.losses.sparse_categorical_crossentropy(output_label, prediction)
+
+    #print("input_label:", input_label)
 
     # Calculate gradients
     gradient = tape.gradient(loss, input_image)
