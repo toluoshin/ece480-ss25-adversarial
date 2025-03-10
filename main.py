@@ -578,7 +578,7 @@ def main():
 
     root = tk.Tk()
     root.title("Adversarial Attacks")
-    root.geometry("500x400")  # Width x Height
+    root.geometry("500x300")  # Width x Height
 
     label = ttk.Label(master = root, text="Choose an option:", font=("Arial", 14))
     label.pack()
@@ -650,7 +650,7 @@ def main():
         input_frame2.pack(pady=5)
 
         # Single button for both entries
-        button = ttk.Button(master=new_root, text="Test Digits", command= lambda: mnist_iterate(int(source_entry.get()), int(target_entry.get())))
+        button = ttk.Button(master=new_root, text="Test Digits", command=lambda: mnist_iterate(int(source_entry.get()), int(target_entry.get())))
         button.pack(pady=10)
 
         new_root.mainloop()
@@ -661,15 +661,13 @@ def main():
         new_root.title("Upload or Draw Image")
         new_root.geometry("300x200")
 
-        def upload_image():
+        def upload_image(target_label):
             file_path = filedialog.askopenfilename()
             if file_path:
                 # Test with uploaded image or drawing
                 try:
                     processed_image = preprocess_uploaded_image(file_path)
 
-                    # get the rqeuested target class
-                    target_label = int(input("\nEnter a digit (0-9) to force misclassification to: "))
 
                     # Get prediction for original image
                     original_pred, original_probs = predict_sample(model, processed_image)
@@ -710,12 +708,67 @@ def main():
                 except Exception as e:
                     print(f"Error processing image: {str(e)}")
 
+                new_root.destroy()
+
+        def draw_digit(target_label):
+            # Test with uploaded image or drawing
+            try:
+                processed_image = get_drawn_digit()
+
+                # Get prediction for original image
+                original_pred, original_probs = predict_sample(model, processed_image)
+                print("\nOriginal Prediction:")
+                print(f"Predicted digit: {original_pred}")
+                print("\nTop 3 probabilities:")
+                top3 = np.argsort(original_probs)[-3:][::-1]
+                for digit, prob in zip(top3, original_probs[top3]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Iterate over epsilon and top N values
+                success_rates = []
+                for epsilon in np.arange(0.1, 1.1, 0.1):
+                    for top_n in range(5, 201, 5):
+                        print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
+                        adversarial_image = create_adversarial_example_saliency(model, processed_image,
+                                                                                np.array([original_pred]),
+                                                                                [target_label], epsilon,
+                                                                                top_n)
+
+                        # Get prediction for adversarial image
+                        adv_pred, adv_probs = predict_sample(model, adversarial_image)
+
+                        # success = 1 if adv_pred != original_pred else 0
+                        success = 1 if adv_pred == target_label else 0
+                        success_rates.append((epsilon, top_n, success))
+
+                # Plot success rate heatmap first, with block=False
+                plot_success_rate(success_rates, block=False)
+
+                # Plot minimum success cases second, with block=True
+                plot_min_success_cases(success_rates, model, processed_image, np.array([original_pred]),
+                                       [target_label])
+
+                # Keep both windows open until any key is pressed
+                plt.show()
+
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")
+
+            new_root.destroy()
+
+        input_frame = ttk.Frame(master=new_root)
+        target_label = ttk.Label(input_frame, text="Target Class:")
+        target_entry = ttk.Entry(input_frame, width=5)
+        target_label.pack(side='left', padx=5)
+        target_entry.pack(side='left', padx=10)
+        input_frame.pack(pady=10)
+
         # Create upload button
-        upload_btn = ttk.Button(new_root, text="Upload Image", command=upload_image)
-        upload_btn.pack(pady=10)
+        upload_btn = ttk.Button(new_root, text="Upload Image", command=lambda: upload_image(int(target_entry.get())))
+        upload_btn.pack(pady=15)
 
         # Draw digit button
-        draw_btn = ttk.Button(new_root, text="Draw Digit", command=get_drawn_digit)
+        draw_btn = ttk.Button(new_root, text="Draw Digit", command=lambda: draw_digit(int(target_entry.get())))
         draw_btn.pack(pady=20)
 
         # Label to display the image
@@ -820,7 +873,119 @@ def main():
         new_root.mainloop()
 
     def test_uploaded_specify():
-        print("Test uploaded image with Saliency map (specify epsilon and top N) selected")
+        new_root = tk.Tk()
+        new_root.title("Upload or Draw Image")
+        new_root.geometry("300x400")
+
+        def upload_image(target_label, epsilon, top_n):
+            file_path = filedialog.askopenfilename()
+            if file_path:
+                try:
+                    processed_image = preprocess_uploaded_image(file_path)
+
+                    # Get prediction for original image
+                    pred, probs = predict_sample(model, processed_image)
+
+                    print("\nPrediction for input image:")
+                    print(f"Predicted digit: {pred}")
+                    print("\nTop 3 probabilities:")
+                    top3 = np.argsort(probs)[-3:][::-1]
+                    for digit, prob in zip(top3, probs[top3]):
+                        print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                    # Saliency Map
+                    adversarial_image = create_adversarial_example_saliency(model, processed_image, np.array([pred]),
+                                                                            [target_label], epsilon, top_n)
+
+                    # Get prediction for adversarial image
+                    adv_pred, adv_probs = predict_sample(model, adversarial_image)
+
+                    print("\nPrediction for adversarial image:")
+                    print(f"Predicted digit: {adv_pred}")
+                    print("\nTop 3 probabilities:")
+                    top3_adv = np.argsort(adv_probs)[-3:][::-1]
+                    for digit, prob in zip(top3_adv, adv_probs[top3_adv]):
+                        print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                    # Plot both images
+                    plot_uploaded_comparison(processed_image, adversarial_image)
+
+                except Exception as e:
+                    print(f"Error processing image: {str(e)}")
+
+                new_root.destroy()
+
+        def draw_digit(target_label, epsilon, top_n):
+            try:
+                processed_image = get_drawn_digit()
+
+                # Get prediction for original image
+                pred, probs = predict_sample(model, processed_image)
+
+                print("\nPrediction for input image:")
+                print(f"Predicted digit: {pred}")
+                print("\nTop 3 probabilities:")
+                top3 = np.argsort(probs)[-3:][::-1]
+                for digit, prob in zip(top3, probs[top3]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Saliency Map
+                adversarial_image = create_adversarial_example_saliency(model, processed_image, np.array([pred]),
+                                                                        [target_label], epsilon, top_n)
+
+                # Get prediction for adversarial image
+                adv_pred, adv_probs = predict_sample(model, adversarial_image)
+
+                print("\nPrediction for adversarial image:")
+                print(f"Predicted digit: {adv_pred}")
+                print("\nTop 3 probabilities:")
+                top3_adv = np.argsort(adv_probs)[-3:][::-1]
+                for digit, prob in zip(top3_adv, adv_probs[top3_adv]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Plot both images
+                plot_uploaded_comparison(processed_image, adversarial_image)
+
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")
+
+            new_root.destroy()
+
+        input_frame1 = ttk.Frame(master=new_root)
+        epsilon_label = ttk.Label(input_frame1, text="Epsilon:")
+        epsilon_entry = ttk.Entry(input_frame1, width=5)
+        epsilon_label.pack(side='left', padx=5)
+        epsilon_entry.pack(side='left', padx=10)
+        input_frame1.pack(pady=10)
+
+        input_frame2 = ttk.Frame(master=new_root)
+        topn_label = ttk.Label(input_frame2, text="Top N:")
+        topn_entry = ttk.Entry(input_frame2, width=5)
+        topn_label.pack(side='left', padx=5)
+        topn_entry.pack(side='left', padx=10)
+        input_frame2.pack(pady=15)
+
+        input_frame3 = ttk.Frame(master=new_root)
+        target_label = ttk.Label(input_frame3, text="Target Class:")
+        target_entry = ttk.Entry(input_frame3, width=5)
+        target_label.pack(side='left', padx=5)
+        target_entry.pack(side='left', padx=10)
+        input_frame3.pack(pady=20)
+
+        # Create upload button
+        upload_btn = ttk.Button(new_root, text="Upload Image", command=lambda: upload_image(int(target_entry.get()),
+                                                                                            float(epsilon_entry.get()),
+                                                                                            int(topn_entry.get())))
+        upload_btn.pack(pady=25)
+
+        # Draw digit button
+        draw_btn = ttk.Button(new_root, text="Draw Digit", command=lambda: draw_digit(int(target_entry.get()),
+                                                                                      float(epsilon_entry.get()),
+                                                                                      int(topn_entry.get())))
+        draw_btn.pack(pady=30)
+
+        # Run the application
+        new_root.mainloop()
 
 
     b1 = ttk.Button(root, text="Test MNIST digits (iterate epsilon and top N)", command=test_mnist_iterate)
