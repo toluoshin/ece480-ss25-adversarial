@@ -62,6 +62,7 @@ class DrawingWindow:
         self.canvas.configure(bg='black')
 
     def save_and_exit(self):
+        print("here")
         # Create a temp file
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
         self.temp_path = temp_file.name
@@ -89,6 +90,9 @@ class DrawingWindow:
         image = image.resize((28, 28), Image.Resampling.LANCZOS)
         image.save(self.temp_path)
 
+        print("saved image ar: ", self.temp_path)
+
+        self.root.quit() 
         self.root.destroy()
         return self.temp_path
 
@@ -104,10 +108,13 @@ def get_drawn_digit():
 
         if window.temp_path is None:
             raise ValueError("No drawing was saved")
+        else:
+            print("saved: ", window.temp_path)
 
         # Use the existing preprocess_uploaded_image function
         from main import preprocess_uploaded_image
         processed_image = preprocess_uploaded_image(window.temp_path)
+        print("here, processed_image: ", processed_image)
 
         # Clean up
         os.remove(window.temp_path)
