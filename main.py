@@ -818,7 +818,7 @@ def main():
     def test_uploaded_iterate():
         new_root = tk.Tk()
         new_root.title("Upload or Draw Image")
-        new_root.geometry("300x200")
+        new_root.geometry("300x300")
 
         def upload_image(target_label):
             file_path = filedialog.askopenfilename()
@@ -932,6 +932,60 @@ def main():
 
             new_root.destroy()
 
+        def picture(target_label):
+            # Test with uploaded image or drawing
+            try:
+                processed_image = preprocess_uploaded_image('/home/designteam10/Picture/image.jpg')
+
+                # Get prediction for original image
+                original_pred, original_probs = predict_sample(model, processed_image)
+                print("\nOriginal Prediction:")
+                print(f"Predicted digit: {original_pred}")
+                print("\nTop 3 probabilities:")
+                top3 = np.argsort(original_probs)[-3:][::-1]
+                for digit, prob in zip(top3, original_probs[top3]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Iterate over epsilon and top N values
+                success_rates = []
+                for epsilon in np.arange(0.1, 1.1, 0.1):
+                    #print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
+                    print(f"Testing epsilon={epsilon:.1f}")
+                    adversarial_image, num_pixels_changed = create_adversarial_example_saliency(model, processed_image, original_pred,
+                                                                            target_label, epsilon, 150)
+                    # Get prediction for adversarial image
+                    original_pred, original_probs = predict_sample(model, processed_image)
+                    adv_pred, adv_probs = predict_sample(model, adversarial_image)
+
+                    success = 1 if adv_pred == target_label else 0
+                    distortion = 0
+                    if success:
+                        print("Adversarial example can be made with epsilon ", epsilon, ", ", num_pixels_changed, " had to be perturbed.")
+                        distortion = tf.reduce_sum(abs(processed_image - adversarial_image)) / float(784)
+                        print(distortion)
+                    else:
+                        print("Adversarial example can NOT be made with epsilon", epsilon)
+                    for n in range(5, 201, 5):
+                        if n < num_pixels_changed:
+                            success_rates.append((epsilon, n, distortion, 0, adv_probs, adversarial_image))
+                        else:
+                            success_rates.append((epsilon, n, distortion, success, adv_probs, adversarial_image))
+
+                # Plot success rate heatmap first, with block=False
+                plot_success_rate(success_rates, block=False)
+
+                # Plot minimum success cases second, with block=True
+                plot_min_success_cases(success_rates, model, processed_image, np.array([original_pred]),
+                                       [target_label])
+
+                # Keep both windows open until any key is pressed
+                plt.show()
+
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")
+
+            new_root.destroy()
+
         input_frame = ttk.Frame(master=new_root)
         target_label = ttk.Label(input_frame, text="Target Class:")
         target_entry = ttk.Entry(input_frame, width=5)
@@ -946,6 +1000,10 @@ def main():
         # Draw digit button
         draw_btn = ttk.Button(new_root, text="Draw Digit", command=lambda: draw_digit(int(target_entry.get())))
         draw_btn.pack(pady=20)
+
+        # Picture Button
+        pciture_btn = ttk.Button(new_root, text="Take Picture", command=lambda: picture(int(target_entry.get())))
+        pciture_btn.pack(pady=25)
 
         # Label to display the image
         img_label = ttk.Label(new_root)
@@ -1145,6 +1203,51 @@ def main():
 
             new_root.destroy()
 
+        def picture(target_label, epsilon):
+            try:
+                processed_image = preprocess_uploaded_image('/home/designteam10/Picture/image.jpg')
+                print(processed_image)
+
+                # Get prediction for original image
+                pred, probs = predict_sample(model, processed_image)
+
+                print("\nPrediction for input image:")
+                print(f"Predicted digit: {pred}")
+                print("\nTop 3 probabilities:")
+                top3 = np.argsort(probs)[-3:][::-1]
+                for digit, prob in zip(top3, probs[top3]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Saliency Map
+                adversarial_image, num_pixels_changed = create_adversarial_example_saliency(model, processed_image, pred,
+                                                                        target_label, epsilon, 0)
+
+                # Get prediction for adversarial image
+                adv_pred, adv_probs = predict_sample(model, adversarial_image)
+
+                print("\nPrediction for adversarial image:")
+                print(f"Predicted digit: {adv_pred}")
+                print("\nTop 3 probabilities:")
+                top3_adv = np.argsort(adv_probs)[-3:][::-1]
+                for digit, prob in zip(top3_adv, adv_probs[top3_adv]):
+                    print(f"Digit {digit}: {prob * 100:.2f}%")
+
+                # Add success/failure message
+                    if adv_pred == target_label:
+                        print(f"\nSuccess! Model was fooled: {pred} → {target_label}")
+                        distortion = tf.reduce_sum(abs(processed_image - adversarial_image)) / float(784)
+                        print("Input feature distortion: ", round(float(distortion.numpy()*100), 2), "%")
+                    else:
+                        print("\nThe model wasn't fooled. Try increasing epsilon or top N.")
+
+                # Plot both images
+                plot_uploaded_comparison(processed_image, adversarial_image)
+
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")
+
+            new_root.destroy()
+
         input_frame1 = ttk.Frame(master=new_root)
         epsilon_label = ttk.Label(input_frame1, text="Epsilon:")
         epsilon_entry = ttk.Entry(input_frame1, width=5)
@@ -1175,6 +1278,11 @@ def main():
         draw_btn = ttk.Button(new_root, text="Draw Digit", command=lambda: draw_digit(int(target_entry.get()),
                                                                                       float(epsilon_entry.get())))
         draw_btn.pack(pady=30)
+
+        # Draw digit button
+        picture_btn = ttk.Button(new_root, text="Take Picture", command=lambda: picture(int(target_entry.get()),
+                                                                                      float(epsilon_entry.get())))
+        picture_btn.pack(pady=35)
 
         # Run the application
         new_root.mainloop()
