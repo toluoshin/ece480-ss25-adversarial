@@ -935,7 +935,7 @@ def main():
         def picture(target_label):
             # Test with uploaded image or drawing
             try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Picture/image.jpg')
+                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg')
 
                 # Get prediction for original image
                 original_pred, original_probs = predict_sample(model, processed_image)
@@ -1205,7 +1205,7 @@ def main():
 
         def picture(target_label, epsilon):
             try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Picture/image.jpg')
+                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg')
                 print(processed_image)
 
                 # Get prediction for original image
