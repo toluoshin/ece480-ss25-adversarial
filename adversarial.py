@@ -3,6 +3,8 @@ import numpy as np
 from evaluate_model import predict_sample
 import math
 import time
+import matplotlib.pyplot as plt
+from tkinter import *
 
 def create_adversarial_example(model, input_image, input_label, epsilon=0.1):
     input_image = tf.convert_to_tensor(input_image)
@@ -42,6 +44,27 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
     #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
 def create_adversarial_example_gradual(model, input_image, input_label, target_label, epsilon=0.1):
+    # to run GUI event loop
+    plt.ion()
+    
+    # create subplots
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+
+    # setting title
+    #plt.title("Live Adversarial Attack", fontsize=20)
+    axes[0].set_title("Adversarial Image")
+    axes[0].axis('off')
+    im = axes[0].imshow(input_image.reshape(28, 28), cmap='gray')
+
+    axes[1].set_title("Confidence Scores")
+    digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    _, adv_probs = predict_sample(model, input_image)
+    bars = axes[1].bar(digits, adv_probs)
+    # axes[1].xlabel("Digits")
+    # axes[1].ylabel("Probability")
+
+    #plt.show()
+
     # variable definitions
     adversarial_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
     modified_pixels = set()
@@ -87,6 +110,23 @@ def create_adversarial_example_gradual(model, input_image, input_label, target_l
         adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon)
         adversarial_image = tf.clip_by_value(adversarial_image, 0, 1)
 
+        # Plot adversarial image
+        adversarial_display = adversarial_image.numpy().reshape(28, 28)
+        im.set_data(adversarial_display)
+        
+
+        # Plot confidences
+        _, new_probs = predict_sample(model, adversarial_image)
+        for bar, new_prob in zip(bars, new_probs):
+            bar.set_height(new_prob)
+
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+        plt.pause(0.01)
+        
+    plt.ioff()
+    # plt.show()
+    plt.close(fig)
     return adversarial_image, len(modified_pixels)
 
 def create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
