@@ -39,7 +39,7 @@ def compute_jacobian(model, adversarial_image, target_label):
     return tape.jacobian(prediction, adversarial_image)
 
 @tf.function
-def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixels, epsilon):
+def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixels, epsilon, convolutional):
     #indices = [[0, most_salient_pixel]]
     # updates = tf.cast(epsilon, tf.float32) * tf.sign(tf.cast(most_salient_pixels, tf.float32))
     #indices = tf.cast(tf.expand_dims(most_salient_pixels, axis=0), tf.int32)
@@ -48,17 +48,16 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
     batch_indices = tf.zeros_like(most_salient_pixels)
     indices = tf.cast(tf.stack([batch_indices, most_salient_pixels], axis=-1), tf.int32)#tf.cast(tf.expand_dims(most_salient_pixels, axis=0), tf.int32)
     
-    # CNN
-    temp = tf.reshape(adversarial_image, [1, 784])
-    temp = tf.tensor_scatter_nd_add(temp, indices, updates)
-    temp = tf.reshape(temp, (1,28,28,1))
-    return temp
+    if convolutional:
+        temp = tf.reshape(adversarial_image, [1, 784])
+        temp = tf.tensor_scatter_nd_add(temp, indices, updates)
+        temp = tf.reshape(temp, (1,28,28,1))
+        return temp
+    else:
+        return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
+        #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
-    # DNN
-    #return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
-    #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
-
-def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon=0.1):
+def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon, convolutional):
     # clear root
     for widget in root.winfo_children():
         widget.destroy()
@@ -104,7 +103,8 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         jacobian = compute_jacobian(model, adversarial_image, target_label)
         #print(jacobian)
         # CNN
-        jacobian = tf.reshape(jacobian, (1, 10, 1, 784))
+        if convolutional:
+            jacobian = tf.reshape(jacobian, (1, 10, 1, 784))
 
         # generate saliency map
         #saliency_map = tf.zeros(adversarial_image.shape[1])
@@ -122,10 +122,10 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
             #print("other_digits_partial_derivative: ", other_digits_partial_derivative)
 
             if i not in modified_pixels and target_partial_derivative > 0 and other_digits_partial_derivative < 0:
-                saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * (1-tf.reshape(adversarial_image, [-1])[i]))
+                saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * min(epsilon, 1-tf.reshape(adversarial_image, [-1])[i]))
                 saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
             elif i not in modified_pixels and target_partial_derivative < 0 and other_digits_partial_derivative > 0:
-                saliency_value = target_partial_derivative * other_digits_partial_derivative * (tf.reshape(adversarial_image, [-1])[i])
+                saliency_value = target_partial_derivative * other_digits_partial_derivative * min(epsilon, tf.reshape(adversarial_image, [-1])[i])
                 saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
             #print("saliency_map[i,j]: ", saliency_map[i,j])
             
@@ -148,7 +148,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
             
         print("number of modified_pixels: ", len(modified_pixels))
 
-        adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon)
+        adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon, convolutional)
         adversarial_image = tf.clip_by_value(adversarial_image, 0, 1)
 
         # Plot adversarial image
@@ -206,10 +206,10 @@ def create_adversarial_example_burst(model, input_image, input_label, target_lab
     return adversarial_image, top_n
 
 
-def create_adversarial_example_saliency(root, model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
+def create_adversarial_example_saliency(root, model, input_image, input_label, target_label, epsilon, top_n, convolutional):
     #return create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon, top_n)
 
-    return create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon)
+    return create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon, convolutional)
     # input_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
     # input_label = tf.convert_to_tensor([input_label], dtype=tf.int64)
 

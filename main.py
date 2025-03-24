@@ -39,7 +39,7 @@ def get_sample_by_digit(x_test, y_test, source_digit):
     return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
 
 
-def preprocess_uploaded_image(image_path):
+def preprocess_uploaded_image(image_path, convolutional):
     """
     Preprocess an uploaded image to match MNIST format.
     """
@@ -59,14 +59,12 @@ def preprocess_uploaded_image(image_path):
             img_array = 1 - img_array
 
         # Flatten the array for model input
-        
-        # DNN
-        #img_array = img_array.reshape(1, 784)
-
-        # CNN
-        img_array.reshape((28,28))
-        img_array = np.expand_dims(img_array, axis=-1)
-        img_array = np.expand_dims(img_array, axis=0)
+        if convolutional:
+            img_array.reshape((28,28))
+            img_array = np.expand_dims(img_array, axis=-1)
+            img_array = np.expand_dims(img_array, axis=0)
+        else:
+            img_array = img_array.reshape(1, 784)
 
         return img_array
     except Exception as e:
@@ -133,7 +131,7 @@ def plot_uploaded_comparison(uploaded_image, adversarial_image=None):
 
 #     clear_screen(root)
 #     # menu button
-#     # menu_btn = ttk.Button(root, text="Back to Menu", command=lambda: load_option_screen())
+#     # menu_btn = ttk.Button(root, text="Back to Menu", command=lambda: load_menu())
 #     # menu_btn.pack(pady = 50)
 
 #     fig = Figure(figsize=(5,5))
@@ -385,7 +383,7 @@ def main():
     def specific_test(model, sample_image, sample_label, target_label, epsilon, root):
         print(f"\nGenerating adversarial example for digit: {sample_label} using Saliency map")
         adversarial_image, num_pixels_changed= create_adversarial_example_saliency(root, model, sample_image, sample_label,
-                                                                target_label, epsilon, 0)
+                                                                target_label, epsilon, 0, convolutional)
 
         # Get predictions
         original_pred, original_probs = predict_sample(model, sample_image)
@@ -435,7 +433,7 @@ def main():
             #print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
             print(f"Testing epsilon={epsilon:.1f}")
             adversarial_image, num_pixels_changed = create_adversarial_example_saliency(root, model, processed_image, original_pred,
-                                                                    target_label, epsilon, 150)
+                                                                    target_label, epsilon, 150, convolutional)
             # Get prediction for adversarial image
             original_pred, original_probs = predict_sample(model, processed_image)
             adv_pred, adv_probs = predict_sample(model, adversarial_image)
@@ -481,7 +479,7 @@ def main():
 
         clear_screen(root)
         # menu button
-        menu_btn = ttk.Button(root, text="Back to Menu", command=lambda: load_option_screen())
+        menu_btn = ttk.Button(root, text="Back to Menu", command=lambda: load_menu())
         menu_btn.pack()
 
         fig = Figure(figsize=(1,1))
@@ -530,69 +528,75 @@ def main():
     root.geometry("%dx%d" % (width, height))
 
     # Welcome screen
-    clear_screen(root)
-    welcome_screen_frame = ttk.Frame(root, padding=10)
-    welcome_screen_frame.pack(expand=True, fill="both")
-    label_1 = tk.Label(master = welcome_screen_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 14), justify="center")
-    label_1.pack()
-    label_2 = tk.Label(master = welcome_screen_frame, text="Model training.....", font=("Arial", 14), justify="center")
-    label_2.pack()
+    # clear_screen(root)
+    # welcome_screen_frame = ttk.Frame(root, padding=10)
+    # welcome_screen_frame.pack(expand=True, fill="both")
+    # label_1 = tk.Label(master = welcome_screen_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 14), justify="center")
+    # label_1.pack()
+    # label_2 = tk.Label(master = welcome_screen_frame, text="Model training.....", font=("Arial", 14), justify="center")
+    # label_2.pack()
     
     # Load and preprocess MNIST dataset for training
     print("Loading MNIST dataset...")
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    print("Done!")
 
     # Normalize and reshape data
     x_train, x_test = x_train / 255.0, x_test / 255.0
 
-    # DNN
-    # x_train = x_train.reshape(-1, 784)
-    # x_test = x_test.reshape(-1, 784)
-
-    # CNN
-    x_train = x_train.reshape((-1,28,28,1))
-    x_test = x_test.reshape((-1,28,28,1))
+    # Model and parameters
+    model = None
+    convolutional = None
+    train_model = None
     
+    def initialize_model():
+        # Parameters
+        # convolutional = False    # True: CNN, False: MLP
+        # train_model = False       # True: training model, False: loading model
+        nonlocal x_train, x_test, convolutional, train_model, model
 
-    # Train the model
-    # print("Training the model...")
+        if convolutional:
+            x_train = x_train.reshape((-1,28,28,1))
+            x_test = x_test.reshape((-1,28,28,1))
+        else:
+            x_train = x_train.reshape(-1, 784)
+            x_test = x_test.reshape(-1, 784)
+        
+        if train_model:
+            # Train the model
+            print("Training the model...")
+            if convolutional:
+                model = tf.keras.Sequential([
+                tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28,28,1)),
+                tf.keras.layers.MaxPooling2D((2, 2)),
+                tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+                tf.keras.layers.MaxPooling2D((2, 2)),
+                tf.keras.layers.Flatten(),
+                tf.keras.layers.Dense(128, activation='relu'),
+                tf.keras.layers.Dense(10, activation='softmax')])
+                model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+                model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+                model.save('cnn_model.keras')
+            else:
+                model = tf.keras.Sequential([
+                    tf.keras.layers.Input(shape=(784,)),
+                    tf.keras.layers.Dense(128, activation='relu'),
+                    tf.keras.layers.Dense(10, activation='softmax')
+                ])
+                model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+                model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+                model.save('mlp_model.keras')
+        else:
+            # Load the model
+            print("Loading the model...")
+            if convolutional:
+                model = tf.keras.models.load_model('cnn_model.keras')
+            else:
+                model = tf.keras.models.load_model('mlp_model.keras')
 
-    # DNN
-    # model = tf.keras.Sequential([
-    #     tf.keras.layers.Input(shape=(784,)),
-    #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(10, activation='softmax')
-    # ])
-    # model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    # model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
-    # model.save('dnn_model.keras')
-
-    # CNN
-    # model = tf.keras.Sequential([
-    #     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28,28,1)),
-    #     tf.keras.layers.MaxPooling2D((2, 2)),
-    #     tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-    #     tf.keras.layers.MaxPooling2D((2, 2)),
-    #     tf.keras.layers.Flatten(),
-    #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(10, activation='softmax')
-    # ])
-    # model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    # model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
-    # model.save('cnn_model.keras')
-
-    # Load the model
-    print("Loading the model...")
-
-    # DNN
-    # model = tf.keras.models.load_model('dnn_model.keras')
-
-    # CNN
-    model = tf.keras.models.load_model('cnn_model.keras')
-
-    print("Model accuracy: ", model.evaluate(x_test, y_test)[1]) 
-    # Show model architecture
-    # model.summary()
+        print("Model baseline accuracy: ", model.evaluate(x_test, y_test)[1]) 
+        # Show model architecture
+        # model.summary()
 
     
     def test_mnist_iterate():
@@ -638,7 +642,7 @@ def main():
         button.pack(pady=5)
 
         # menu button
-        menu_btn = ttk.Button(test_mnist_iterate_frame, text="Back to Menu", command=lambda: load_option_screen())
+        menu_btn = ttk.Button(test_mnist_iterate_frame, text="Back to Menu", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -647,7 +651,7 @@ def main():
             # get image from file system
             file_path = filedialog.askopenfilename()
             try:
-                processed_image = preprocess_uploaded_image(file_path)
+                processed_image = preprocess_uploaded_image(file_path, convolutional)
                 iteration_test(model, processed_image, target_label, root)
             except Exception as e:
                 print(f"Error processing image: {str(e)}")   
@@ -704,7 +708,7 @@ def main():
         picture_btn.pack(pady=5)
 
         # menu button
-        menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Back to Menu", command=lambda: load_option_screen())
+        menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Back to Menu", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -760,7 +764,7 @@ def main():
         button.pack(pady=10)
 
         # menu button
-        menu_btn = ttk.Button(test_mnist_specify_frame, text="Back to Menu", command=lambda: load_option_screen())
+        menu_btn = ttk.Button(test_mnist_specify_frame, text="Back to Menu", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -768,7 +772,7 @@ def main():
         def file_option(target_label, epsilon):
             file_path = filedialog.askopenfilename()
             try:
-                processed_image = preprocess_uploaded_image(file_path)
+                processed_image = preprocess_uploaded_image(file_path, convolutional)
                 pred, probs = predict_sample(model, processed_image)
                 specific_test(model, processed_image, pred, target_label, epsilon, root)
             except Exception as e:
@@ -838,12 +842,12 @@ def main():
 
         # menu button
         #menu_frame = ttk.Frame(master=test_uploaded_specify_frame)
-        menu_btn = ttk.Button(test_uploaded_specify_frame, text="Back to Menu", command=lambda: load_option_screen())
+        menu_btn = ttk.Button(test_uploaded_specify_frame, text="Back to Menu", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
         # menu_frame.pack(expand=True,fill="x")
 
     # Option screen
-    def load_option_screen():
+    def load_menu():
         clear_screen(root)
         option_screen_frame = ttk.Frame(root, padding=10)
         option_screen_frame.pack(expand=True, fill="x")
@@ -857,10 +861,55 @@ def main():
         button3.pack(padx=20, pady=5)
         button4 = ttk.Button(master = option_screen_frame, text="Create an adversarial example for uploaded picture (specify max epsilon)", command=test_uploaded_specify)#.grid(column=0, row=4)
         button4.pack(padx=20, pady=5)
-        button5 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
-        button5.pack(padx=20, pady=5)
+        tk.Label(master = option_screen_frame, text=" ", font=("Arial", 20), justify="center").pack()
+        button5 = ttk.Button(master = option_screen_frame, text="Choose new neural network model", command=lambda: load_welcome_screen())
+        button5.pack()
+        tk.Label(master = option_screen_frame, text=" ", font=("Arial", 6), justify="center").pack()
+        button6 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
+        button6.pack()
 
-    load_option_screen()
+    def first_load_menu(conv, train):
+        nonlocal convolutional, train_model
+        convolutional = conv
+        train_model = train
+        initialize_model()
+        load_menu()
+
+    def load_welcome_screen():
+        # def on_radio_change():
+        #     convolutional = convo_var.get()
+        #     train_model = train_var.get()
+        
+        clear_screen(root)
+        welcome_screen_frame = ttk.Frame(root, padding=10)
+        welcome_screen_frame.pack(expand=True, fill="x")
+        welcome_label = tk.Label(master = welcome_screen_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 14), justify="center")
+        welcome_label.pack(pady=5)
+        instruction_label_1 = tk.Label(master = welcome_screen_frame, text="Select from the options below:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+        instruction_label_1.pack()
+        tk.Label(master = welcome_screen_frame, text=" ", font=("Arial", 14), justify="center").pack()
+        instruction_label_2 = tk.Label(master = welcome_screen_frame, text="Choose type of Deep Neural Network (DNN):", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+        instruction_label_2.pack(pady=5)
+        convo_var = tk.BooleanVar(value = False)
+        radio_mlp = ttk.Radiobutton(welcome_screen_frame, text="Multi-Layer Perceptron", variable=convo_var, value=False)#, command=on_radio_change)
+        radio_mlp.pack()
+        radio_convo = ttk.Radiobutton(welcome_screen_frame, text="Convolutional Neural Network", variable=convo_var, value=True)#, command=on_radio_change)
+        radio_convo.pack()
+        tk.Label(master = welcome_screen_frame, text=" ", font=("Arial", 14), justify="center").pack()
+        instruction_label_3 = tk.Label(master = welcome_screen_frame, text="Choose whether to load trained model or to train one now:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+        instruction_label_3.pack(pady=5)
+        train_var = tk.BooleanVar(value = False)
+        radio_load = ttk.Radiobutton(welcome_screen_frame, text="Load trained model", variable=train_var, value=False)#, command=on_radio_change)
+        radio_load.pack()
+        radio_train = ttk.Radiobutton(welcome_screen_frame, text="Train a model now", variable=train_var, value=True)#, command=on_radio_change)
+        radio_train.pack()
+        done_button = ttk.Button(master = welcome_screen_frame, text="Proceed!", command=lambda: first_load_menu(convo_var.get(), train_var.get()))
+        done_button.pack(pady=30)
+
+
+        
+
+    load_welcome_screen()
     root.mainloop()
 
 
