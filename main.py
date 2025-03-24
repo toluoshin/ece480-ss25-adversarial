@@ -36,7 +36,6 @@ def get_sample_by_digit(x_test, y_test, source_digit):
 
     # Select random index instead of first one
     sample_idx = np.random.choice(digit_indices)
-
     return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
 
 
@@ -60,7 +59,14 @@ def preprocess_uploaded_image(image_path):
             img_array = 1 - img_array
 
         # Flatten the array for model input
-        img_array = img_array.reshape(1, 784)
+        
+        # DNN
+        #img_array = img_array.reshape(1, 784)
+
+        # CNN
+        img_array.reshape((28,28))
+        img_array = np.expand_dims(img_array, axis=-1)
+        img_array = np.expand_dims(img_array, axis=0)
 
         return img_array
     except Exception as e:
@@ -538,20 +544,55 @@ def main():
 
     # Normalize and reshape data
     x_train, x_test = x_train / 255.0, x_test / 255.0
-    x_train = x_train.reshape(-1, 784)
-    x_test = x_test.reshape(-1, 784)
+
+    # DNN
+    # x_train = x_train.reshape(-1, 784)
+    # x_test = x_test.reshape(-1, 784)
+
+    # CNN
+    x_train = x_train.reshape((-1,28,28,1))
+    x_test = x_test.reshape((-1,28,28,1))
+    
 
     # Train the model
-    print("Training the model...")
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(784,)),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(10, activation='softmax')
-    ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+    # print("Training the model...")
+
+    # DNN
+    # model = tf.keras.Sequential([
+    #     tf.keras.layers.Input(shape=(784,)),
+    #     tf.keras.layers.Dense(128, activation='relu'),
+    #     tf.keras.layers.Dense(10, activation='softmax')
+    # ])
+    # model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+    # model.save('dnn_model.keras')
+
+    # CNN
+    # model = tf.keras.Sequential([
+    #     tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28,28,1)),
+    #     tf.keras.layers.MaxPooling2D((2, 2)),
+    #     tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+    #     tf.keras.layers.MaxPooling2D((2, 2)),
+    #     tf.keras.layers.Flatten(),
+    #     tf.keras.layers.Dense(128, activation='relu'),
+    #     tf.keras.layers.Dense(10, activation='softmax')
+    # ])
+    # model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    # model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+    # model.save('cnn_model.keras')
+
+    # Load the model
+    print("Loading the model...")
+
+    # DNN
+    # model = tf.keras.models.load_model('dnn_model.keras')
+
+    # CNN
+    model = tf.keras.models.load_model('cnn_model.keras')
 
     print("Model accuracy: ", model.evaluate(x_test, y_test)[1]) 
+    # Show model architecture
+    # model.summary()
 
     
     def test_mnist_iterate():

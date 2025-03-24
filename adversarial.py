@@ -47,9 +47,15 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
     updates = tf.cast(tf.sign(tf.gather(saliency_map, most_salient_pixels)), tf.float32) * tf.cast(1*epsilon, tf.float32)
     batch_indices = tf.zeros_like(most_salient_pixels)
     indices = tf.cast(tf.stack([batch_indices, most_salient_pixels], axis=-1), tf.int32)#tf.cast(tf.expand_dims(most_salient_pixels, axis=0), tf.int32)
-    #tf.print("updates: ", updates)
-    #tf.print("indices: ", indices)
-    return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
+    
+    # CNN
+    temp = tf.reshape(adversarial_image, [1, 784])
+    temp = tf.tensor_scatter_nd_add(temp, indices, updates)
+    temp = tf.reshape(temp, (1,28,28,1))
+    return temp
+
+    # DNN
+    #return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
     #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
 def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon=0.1):
@@ -91,33 +97,48 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     ctr = 0
 
     # adversarial crafting loop
-    while predict_sample(model, adversarial_image)[0] != target_label and ctr < input_image.shape[1]/2:
+    while predict_sample(model, adversarial_image)[0] != target_label and ctr < 784/2:
         ctr+=1
 
         # compute Jacobian()
         jacobian = compute_jacobian(model, adversarial_image, target_label)
+        #print(jacobian)
+        # CNN
+        jacobian = tf.reshape(jacobian, (1, 10, 1, 784))
 
         # generate saliency map
-        saliency_map = tf.zeros(adversarial_image.shape[1])
+        #saliency_map = tf.zeros(adversarial_image.shape[1])
+        saliency_map = tf.zeros(784)
+        #saliency_map = tf.zeros((28,28))
+        #print(adversarial_image.shape)
+        #print(saliency_map.shape)
 
         for i in range(len(saliency_map)):
             target_partial_derivative = jacobian[0][target_label][0][i]
+            #target_partial_derivative = jacobian[0][target_label][0][i][j][0]
+            #print("target_partial_derivative: ", target_partial_derivative)
             other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i] for digit in range(10) if digit != target_label])
+            #other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i, j, 0] for digit in range(10) if digit != target_label])
+            #print("other_digits_partial_derivative: ", other_digits_partial_derivative)
 
             if i not in modified_pixels and target_partial_derivative > 0 and other_digits_partial_derivative < 0:
-                saliency_value = abs(target_partial_derivative * other_digits_partial_derivative)
+                saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * (1-tf.reshape(adversarial_image, [-1])[i]))
                 saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
             elif i not in modified_pixels and target_partial_derivative < 0 and other_digits_partial_derivative > 0:
-                saliency_value = target_partial_derivative * other_digits_partial_derivative
+                saliency_value = target_partial_derivative * other_digits_partial_derivative * (tf.reshape(adversarial_image, [-1])[i])
                 saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
+            #print("saliency_map[i,j]: ", saliency_map[i,j])
             
-        #Create a mask so only digit pixels are affected
+        #  Create a mask so only digit pixels are affected
         mask = (input_image > 0.05)  # Create mask near non-zero pixels
         mask = tf.cast(tf.reshape(mask, [-1]), dtype=saliency_map.dtype)  # Ensure dtype compatibility
+        mask = tf.cast(mask, dtype=saliency_map.dtype)  # Ensure dtype compatibility
         saliency_map = saliency_map * mask
+        #print("saliency_map: ", saliency_map)
 
         # get top 2 salient pixels
         _, top_2_indices = tf.math.top_k(tf.abs(saliency_map), k=2)
+        print("top_2_indices:", top_2_indices)
 
         if top_2_indices[0] == 0:       # this basically means that there are no more salient pixels to choose from, aka the model was unable to make an adversarial example
             return adversarial_image, 0
