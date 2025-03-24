@@ -5,6 +5,15 @@ import math
 import time
 import matplotlib.pyplot as plt
 from tkinter import *
+from matplotlib.figure import Figure 
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,  
+NavigationToolbar2Tk) 
+
+# def load_attack_window(root):
+#     for widget in root.winfo_children():
+#         widget.destroy()
+#     fig = Figure(figsize = (10,5), dpi = 100)
+#     canvas = FigureCanvasTkAgg()
 
 def create_adversarial_example(model, input_image, input_label, epsilon=0.1):
     input_image = tf.convert_to_tensor(input_image)
@@ -43,12 +52,23 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
     return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
     #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
-def create_adversarial_example_gradual(model, input_image, input_label, target_label, epsilon=0.1):
+def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon=0.1):
+    # clear root
+    for widget in root.winfo_children():
+        widget.destroy()
+    
     # to run GUI event loop
-    plt.ion()
+    #plt.ion()
     
     # create subplots
-    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    #fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+    fig = Figure(figsize=(1,1))
+    axes = fig.subplots(1,2)
+
+    # Creating the Tkinter canvas containing the Matplotlib figure
+    canvas = FigureCanvasTkAgg(fig, master = root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(expand=True, fill='both')
 
     # setting title
     #plt.title("Live Adversarial Attack", fontsize=20)
@@ -122,11 +142,12 @@ def create_adversarial_example_gradual(model, input_image, input_label, target_l
 
         fig.canvas.draw()
         fig.canvas.flush_events()
-        plt.pause(0.01)
+        root.update_idletasks()
+        #plt.pause(0.01
         
-    plt.ioff()
+    #plt.ioff()
     # plt.show()
-    plt.close(fig)
+    #plt.close(fig)
     return adversarial_image, len(modified_pixels)
 
 def create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
@@ -164,10 +185,10 @@ def create_adversarial_example_burst(model, input_image, input_label, target_lab
     return adversarial_image, top_n
 
 
-def create_adversarial_example_saliency(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
+def create_adversarial_example_saliency(root, model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
     #return create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon, top_n)
 
-    return create_adversarial_example_gradual(model, input_image, input_label, target_label, epsilon)
+    return create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon)
     # input_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
     # input_label = tf.convert_to_tensor([input_label], dtype=tf.int64)
 
