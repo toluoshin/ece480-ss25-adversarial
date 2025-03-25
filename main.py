@@ -316,7 +316,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     min_distortion_top_3_data = list(zip(min_distortion_top_3, min_distortion_confidence_top_3))
 
     # Display confidence text in a separate window
-    plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
+    #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
 
     # Create a new figure with a specific figure number
     fig = plt.figure(num=2, figsize=(20, 20))

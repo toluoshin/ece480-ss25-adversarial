@@ -58,6 +58,13 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
         #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
 def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon, convolutional):
+    # variable definitions
+    adversarial_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
+    #modified_pixels = set()
+    modified_pixels = tf.ones(784)
+    pix_num = 0
+    ctr = 0
+    
     # clear root
     for widget in root.winfo_children():
         widget.destroy()
@@ -77,7 +84,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
 
     # setting title
     #plt.title("Live Adversarial Attack", fontsize=20)
-    axes[0].set_title("Adversarial Image")
+    axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,1)}, Pixels Modified: {pix_num}")
     axes[0].axis('off')
     im = axes[0].imshow(input_image.reshape(28, 28), cmap='gray')
 
@@ -90,10 +97,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
 
     #plt.show()
 
-    # variable definitions
-    adversarial_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
-    modified_pixels = set()
-    ctr = 0
+    
 
     # adversarial crafting loop
     while predict_sample(model, adversarial_image)[0] != target_label and ctr < 784/2:
@@ -113,27 +117,40 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         #print(adversarial_image.shape)
         #print(saliency_map.shape)
 
-        for i in range(len(saliency_map)):
-            target_partial_derivative = jacobian[0][target_label][0][i]
-            #target_partial_derivative = jacobian[0][target_label][0][i][j][0]
-            #print("target_partial_derivative: ", target_partial_derivative)
-            other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i] for digit in range(10) if digit != target_label])
-            #other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i, j, 0] for digit in range(10) if digit != target_label])
-            #print("other_digits_partial_derivative: ", other_digits_partial_derivative)
+        # for i in range(len(saliency_map)):
+        #     target_partial_derivative = jacobian[0][target_label][0][i]
+        #     #target_partial_derivative = jacobian[0][target_label][0][i][j][0]
+        #     #print("target_partial_derivative: ", target_partial_derivative)
+        #     other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i] for digit in range(10) if digit != target_label])
+        #     #other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i, j, 0] for digit in range(10) if digit != target_label])
+        #     #print("other_digits_partial_derivative: ", other_digits_partial_derivative)
 
-            if i not in modified_pixels and target_partial_derivative > 0 and other_digits_partial_derivative < 0:
-                saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * min(epsilon, 1-tf.reshape(adversarial_image, [-1])[i]))
-                saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
-            elif i not in modified_pixels and target_partial_derivative < 0 and other_digits_partial_derivative > 0:
-                saliency_value = target_partial_derivative * other_digits_partial_derivative * min(epsilon, tf.reshape(adversarial_image, [-1])[i])
-                saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
+        #     if i not in modified_pixels and target_partial_derivative > 0 and other_digits_partial_derivative < 0:
+        #         saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * min(epsilon, 1-tf.reshape(adversarial_image, [-1])[i]))
+        #         saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
+        #     elif i not in modified_pixels and target_partial_derivative < 0 and other_digits_partial_derivative > 0:
+        #         saliency_value = target_partial_derivative * other_digits_partial_derivative * min(epsilon, tf.reshape(adversarial_image, [-1])[i])
+        #         saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
             #print("saliency_map[i,j]: ", saliency_map[i,j])
+        target_pd = jacobian[0, target_label, 0, :]
+        all_pd = jacobian[0, :, 0, :]
+
+        sum_all = tf.reduce_sum(all_pd, axis=0)
+        other_pd = sum_all - target_pd
+
+        cond1 = tf.logical_and(target_pd>0, other_pd<0)
+        cond2 = tf.logical_and(target_pd<0, other_pd>0)
+
+        val1 = tf.abs(target_pd*other_pd*tf.minimum(epsilon, 1-tf.reshape(adversarial_image, [-1])))
+        val2 = target_pd*other_pd*tf.minimum(epsilon, tf.reshape(adversarial_image, [-1]))
+
+        saliency_map = tf.where(cond1, val1, tf.where(cond2, val2, tf.zeros_like(target_pd)))
             
         #  Create a mask so only digit pixels are affected
         mask = (input_image > 0.05)  # Create mask near non-zero pixels
         mask = tf.cast(tf.reshape(mask, [-1]), dtype=saliency_map.dtype)  # Ensure dtype compatibility
         mask = tf.cast(mask, dtype=saliency_map.dtype)  # Ensure dtype compatibility
-        saliency_map = saliency_map * mask
+        saliency_map = saliency_map * mask * modified_pixels
         #print("saliency_map: ", saliency_map)
 
         # get top 2 salient pixels
@@ -144,14 +161,18 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
             return adversarial_image, 0
 
         for pix in top_2_indices:
-            modified_pixels.add(pix.numpy().item())
+            #modified_pixels.add(pix.numpy().item())
+            #modified_pixels[pix] = 0
+            modified_pixels = tf.tensor_scatter_nd_update(modified_pixels, [[pix]], [0])
+            pix_num+=1
             
-        print("number of modified_pixels: ", len(modified_pixels))
+        print("number of modified_pixels: ", pix_num)
 
         adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon, convolutional)
         adversarial_image = tf.clip_by_value(adversarial_image, 0, 1)
 
         # Plot adversarial image
+        axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,1)}, Pixels Modified: {pix_num}")
         adversarial_display = adversarial_image.numpy().reshape(28, 28)
         im.set_data(adversarial_display)
         
@@ -164,12 +185,12 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         fig.canvas.draw()
         fig.canvas.flush_events()
         root.update_idletasks()
-        #plt.pause(0.01
+        #plt.pause(0.05)
         
     #plt.ioff()
     # plt.show()
     #plt.close(fig)
-    return adversarial_image, len(modified_pixels)
+    return adversarial_image, pix_num
 
 def create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
      # variable definitions
