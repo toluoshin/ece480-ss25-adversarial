@@ -380,6 +380,8 @@ def clear_screen(root):
 
 
 def main():
+    valid_digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
     def specific_test(model, sample_image, sample_label, target_label, epsilon, root):
         print(f"\nGenerating adversarial example for digit: {sample_label} using Saliency map")
         adversarial_image, num_pixels_changed= create_adversarial_example_saliency(root, model, sample_image, sample_label,
@@ -620,25 +622,27 @@ def main():
         instruction_label_1.pack()
 
         # source class entry
-        input_frame1 = ttk.Frame(master=test_mnist_iterate_frame)
-        source_label = ttk.Label(input_frame1, text="Source Class:")
-        source_label.pack()
-        source_entry = ttk.Entry(input_frame1, width=5)
-        source_entry.pack(padx=10)
-        input_frame1.pack(pady=5)
+        source_digit = tk.StringVar()
+        source_digit.set(valid_digits[0])
 
         # target class entry
-        input_frame2 = ttk.Frame(master=test_mnist_iterate_frame)
-        target_label = ttk.Label(input_frame2, text="Target Class:")
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
+        source_label = ttk.Label(test_mnist_iterate_frame, text="Source Class:")
+        source_label.pack()
+        source_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, source_digit, *valid_digits)
+        source_dropdown.pack()
+
+        target_label = ttk.Label(test_mnist_iterate_frame, text="Target Class:")
         target_label.pack()
-        target_entry = ttk.Entry(input_frame2, width=5)
-        target_entry.pack(padx=10)
-        input_frame2.pack(pady=5)
+        target_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, target_class, *valid_digits)
+        target_dropdown.pack()
 
         # Attack button
         button = ttk.Button(master=test_mnist_iterate_frame, text="Run Attack!",
-                                command=lambda: mnist_iterate(int(source_entry.get()),
-                                                            int(target_entry.get())))
+                                command=lambda: mnist_iterate(int(source_digit.get()),
+                                                            int(target_class.get())))
         button.pack(pady=5)
 
         # menu button
@@ -733,20 +737,23 @@ def main():
         instruction_label_1.pack()
 
         # source class entry
-        input_frame1 = ttk.Frame(master=test_mnist_specify_frame)
-        source_label = ttk.Label(input_frame1, text="Source Class:")
-        source_label.pack()
-        source_entry = ttk.Entry(input_frame1, width=5)
-        source_entry.pack(padx=10)
-        input_frame1.pack(pady=5)
+        source_digit = tk.StringVar()
+        source_digit.set(valid_digits[0])
 
         # target class entry
-        input_frame2 = ttk.Frame(master=test_mnist_specify_frame)
-        target_label = ttk.Label(input_frame2, text="Target Class:")
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
+        source_label = ttk.Label(test_mnist_specify_frame, text="Source Class:")
+        source_label.pack()
+        source_dropdown = ttk.OptionMenu(test_mnist_specify_frame, source_digit, *valid_digits)
+        source_dropdown.pack()
+
+        target_label = ttk.Label(test_mnist_specify_frame, text="Target Class:")
         target_label.pack()
-        target_entry = ttk.Entry(input_frame2, width=5)
-        target_entry.pack(padx=10)
-        input_frame2.pack(pady=5)
+        target_dropdown = ttk.OptionMenu(test_mnist_specify_frame, target_class, *valid_digits)
+        target_dropdown.pack()
+
 
         # epsilon entry
         input_frame3 = ttk.Frame(master=test_mnist_specify_frame)
@@ -758,8 +765,8 @@ def main():
 
         # Attack button
         button = ttk.Button(master=test_mnist_specify_frame, text="Run Attack!",
-                                command=lambda: mnist_specify(int(source_entry.get()),
-                                                            int(target_entry.get()),
+                                command=lambda: mnist_specify(int(source_digit.get()),
+                                                            int(target_class.get()),
                                                             float(epsilon_entry.get())))
         button.pack(pady=10)
 
