@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import *
 from PIL import Image, ImageTk
 import io
 from train_model import train_model
@@ -688,11 +689,14 @@ def main():
         instruction_label_1.pack()
 
         # target class entry
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
         input_frame1 = ttk.Frame(master=test_uploaded_iterate_frame)
-        target_label = ttk.Label(input_frame1, text="Target Class:")
+        target_label = ttk.Label(test_uploaded_iterate_frame, text="Target Class:")
         target_label.pack()
-        target_entry = ttk.Entry(input_frame1, width=5)
-        target_entry.pack(padx=10)
+        target_dropdown = ttk.OptionMenu(test_uploaded_iterate_frame, target_class, *valid_digits)
+        target_dropdown.pack()
         input_frame1.pack(pady=5)
 
         # Instruction label 2
@@ -700,15 +704,15 @@ def main():
         instruction_label_2.pack()
 
         # Create upload button
-        upload_btn = ttk.Button(test_uploaded_iterate_frame, text="Upload Image", command=lambda: file_option(int(target_entry.get())))
+        upload_btn = ttk.Button(test_uploaded_iterate_frame, text="Upload Image", command=lambda: file_option(int(target_class.get())))
         upload_btn.pack(pady=5)
 
         # Draw digit button
-        draw_btn = ttk.Button(test_uploaded_iterate_frame, text="Draw Digit", command=lambda: draw_option(int(target_entry.get())))
+        draw_btn = ttk.Button(test_uploaded_iterate_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get())))
         draw_btn.pack(pady=5)
 
         # Take picture button
-        picture_btn = ttk.Button(test_uploaded_iterate_frame, text="Take Picture", command=lambda: picture_option(int(target_entry.get())))
+        picture_btn = ttk.Button(test_uploaded_iterate_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get())))
         picture_btn.pack(pady=5)
 
         # menu button
@@ -759,15 +763,15 @@ def main():
         input_frame3 = ttk.Frame(master=test_mnist_specify_frame)
         epsilon_label = ttk.Label(input_frame3, text="Epsilon:")
         epsilon_label.pack()
-        epsilon_entry = ttk.Entry(input_frame3, width=5)
-        epsilon_entry.pack(padx=10)
+        epsilon_slider = tk.Scale(input_frame3, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+        epsilon_slider.pack()
         input_frame3.pack(pady=5)
 
         # Attack button
         button = ttk.Button(master=test_mnist_specify_frame, text="Run Attack!",
                                 command=lambda: mnist_specify(int(source_digit.get()),
                                                             int(target_class.get()),
-                                                            float(epsilon_entry.get())))
+                                                            float(epsilon_slider.get())))
         button.pack(pady=10)
 
         # menu button
@@ -816,16 +820,19 @@ def main():
         input_frame1 = ttk.Frame(master=test_uploaded_specify_frame)
         epsilon_label = ttk.Label(input_frame1, text="Epsilon:")
         epsilon_label.pack()
-        epsilon_entry = ttk.Entry(input_frame1, width=5)
-        epsilon_entry.pack(padx=10)
+        epsilon_slider = tk.Scale(input_frame1, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+        epsilon_slider.pack(padx=10)
         input_frame1.pack(pady=5)
 
         # target class entry
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
         input_frame3 = ttk.Frame(master=test_uploaded_specify_frame)
         target_label = ttk.Label(input_frame3, text="Target Class:")
         target_label.pack()
-        target_entry = ttk.Entry(input_frame3, width=5)
-        target_entry.pack(padx=10)
+        target_dropdown = ttk.OptionMenu(input_frame3, target_class, *valid_digits)
+        target_dropdown.pack()
         input_frame3.pack(pady=5)
 
         # Instruction label 2
@@ -833,18 +840,18 @@ def main():
         instruction_label_2.pack()
 
         # Create upload button
-        upload_btn = ttk.Button(test_uploaded_specify_frame, text="Upload Image", command=lambda: file_option(int(target_entry.get()),
-                                                                                            float(epsilon_entry.get())))
+        upload_btn = ttk.Button(test_uploaded_specify_frame, text="Upload Image", command=lambda: file_option(int(target_class.get()),
+                                                                                            float(epsilon_slider.get())))
         upload_btn.pack(pady=5)
 
         # Draw digit button
-        draw_btn = ttk.Button(test_uploaded_specify_frame, text="Draw Digit", command=lambda: draw_option(int(target_entry.get()),
-                                                                                        float(epsilon_entry.get())))
+        draw_btn = ttk.Button(test_uploaded_specify_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get()),
+                                                                                        float(epsilon_slider.get())))
         draw_btn.pack(pady=5)
 
         # Take picture button
-        picture_btn = ttk.Button(test_uploaded_specify_frame, text="Take Picture", command=lambda: picture_option(int(target_entry.get()),
-                                                                                        float(epsilon_entry.get())))
+        picture_btn = ttk.Button(test_uploaded_specify_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get()),
+                                                                                        float(epsilon_slider.get())))
         picture_btn.pack(pady=5)
 
         # menu button
