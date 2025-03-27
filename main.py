@@ -71,6 +71,37 @@ def preprocess_uploaded_image(image_path, convolutional):
     except Exception as e:
         raise ValueError(f"Error processing image: {str(e)}")
 
+'''def upload_image_with_base(base_image_path,new_image_path):
+    try:
+        # Load and convert image to grayscale
+        img_b = Image.open(base_image_path).convert('L')
+        img_n = Image.open(new_image_path).convert('L')
+
+        # Resize to 28x28
+        img_b = img_b.resize((28, 28), Image.Resampling.LANCZOS)
+        img_n = img_n.resize((28, 28), Image.Resampling.LANCZOS)
+
+        # Convert to numpy array and normalize
+        img_array_b = np.array(img_b, dtype=np.float32)
+        img_array_b = img_array_b / 255.0
+        img_array_n = np.array(img_n, dtype=np.float32)
+        img_array_n = img_array_n / 255.0
+
+        # Invert if necessary (MNIST has white digits on black background)
+        if img_array_b.mean() > 0.5:
+            img_array_b = 1 - img_array_b
+        if img_array_n.mean() > 0.5:
+            img_array_n = 1 - img_array_n
+
+        # Subtract pixels using Matrix/Array subtraction
+        result_array = np.subtract(img_array_n, img_array_b)
+
+        # Flatten the array for model input
+        result_array = result_array.reshape(1, 784)
+
+        return img_array_n
+    except Exception as e:
+        raise ValueError(f"Error processing image: {str(e)}")'''
 
 def plot_uploaded_comparison(uploaded_image, adversarial_image=None):
     """Plot the uploaded image and its adversarial version if available."""
@@ -679,6 +710,14 @@ def main():
                 iteration_test(model, processed_image, target_label, root)
             except Exception as e:
                 print(f"Error processing image: {str(e)}")
+
+        '''def base_picture_option(target_label):
+            # Test with uploaded images
+            try:
+                processed_image = upload_image_with_base('/home/designteam10/Pictures/image.jpg')
+                iteration_test(model, processed_image, target_label, root)
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")'''
 
 
         clear_screen(root)
