@@ -320,7 +320,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
 
     # Create a new figure with a specific figure number
-    fig = plt.figure(num=2, figsize=(20, 20))
+    fig = plt.figure(num=2, figsize=(10, 7))
     # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
 
     # Case 1: Minimum epsilon successful case
@@ -339,6 +339,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[0, 2].axis('off')
 
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    axes[0, 3].set_title("Confidence Scores")
     axes[0, 3].bar(digits, min_epsilon_confidence)
 
     # Case 2: Minimum pixel count successful case
@@ -354,6 +355,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[1, 2].set_title("Perturbation (Min Top N)")
     axes[1, 2].axis('off')
 
+    axes[1, 3].set_title("Confidence Scores")
     axes[1, 3].bar(digits, min_top_n_confidence)
 
     # Case 3: Minimum distortion successful case
@@ -369,6 +371,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 2].set_title("Perturbation (Min Top N)")
     axes[2, 2].axis('off')
 
+    axes[2, 3].set_title("Confidence Scores")
     axes[2, 3].bar(digits, min_distortion_confidence)
 
     plt.tight_layout()

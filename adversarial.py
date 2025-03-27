@@ -57,6 +57,64 @@ def update_adversarial_image(saliency_map, adversarial_image, most_salient_pixel
         return tf.tensor_scatter_nd_add(adversarial_image, indices, updates)
         #return tf.tensor_scatter_nd_add(adversarial_image, tf.cast(tf.expand_dims(most_salient_pixels, axis=1), tf.int32), updates)
 
+def create_adversarial_example_saliency_test(model, input_image, target_label, epsilon, convolutional):
+    # variable definitions
+    adversarial_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
+    modified_pixels = tf.ones(784)
+    pix_num = 0
+    ctr = 0
+
+    #print(predict_sample(model, adversarial_image)[0])
+    #print(target_label)
+    # adversarial crafting loop
+    while predict_sample(model, adversarial_image)[0] != target_label and ctr < 784/2:
+        #print("in loop")
+        ctr+=1
+
+        # compute Jacobian()
+        jacobian = compute_jacobian(model, adversarial_image, target_label)
+        if convolutional:
+            jacobian = tf.reshape(jacobian, (1, 10, 1, 784))
+
+        # generate saliency map
+        #saliency_map = tf.zeros(784)
+        target_pd = jacobian[0, target_label, 0, :]
+        all_pd = jacobian[0, :, 0, :]
+
+        sum_all = tf.reduce_sum(all_pd, axis=0)
+        other_pd = sum_all - target_pd
+
+        cond1 = tf.logical_and(target_pd>0, other_pd<0)
+        cond2 = tf.logical_and(target_pd<0, other_pd>0)
+
+        val1 = tf.abs(target_pd*other_pd*tf.minimum(epsilon, 1-tf.reshape(adversarial_image, [-1])))
+        val2 = target_pd*other_pd*tf.minimum(epsilon, tf.reshape(adversarial_image, [-1]))
+
+        saliency_map = tf.where(cond1, val1, tf.where(cond2, val2, tf.zeros_like(target_pd)))
+            
+        #  Create a mask so only digit pixels are affected
+        mask = (input_image > 0.05)  # Create mask near non-zero pixels
+        mask = tf.cast(tf.reshape(mask, [-1]), dtype=saliency_map.dtype)  # Ensure dtype compatibility
+        mask = tf.cast(mask, dtype=saliency_map.dtype)  # Ensure dtype compatibility
+        saliency_map = saliency_map * mask * modified_pixels
+
+        # get top 2 salient pixels
+        _, top_2_indices = tf.math.top_k(tf.abs(saliency_map), k=2)
+        #print(top_2_indices)
+
+        if top_2_indices[0] == 0:       # this basically means that there are no more salient pixels to choose from, aka the model was unable to make an adversarial example
+            return adversarial_image, 0
+
+        for pix in top_2_indices:
+            modified_pixels = tf.tensor_scatter_nd_update(modified_pixels, [[pix]], [0])
+            pix_num+=1
+
+        adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon, convolutional)
+        adversarial_image = tf.clip_by_value(adversarial_image, 0, 1)
+
+    return adversarial_image, pix_num
+
+
 def create_adversarial_example_gradual(root, model, input_image, input_label, target_label, epsilon, convolutional):
     # variable definitions
     adversarial_image = tf.convert_to_tensor(input_image, dtype=tf.float32)
@@ -84,14 +142,17 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
 
     # setting title
     #plt.title("Live Adversarial Attack", fontsize=20)
-    axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,1)}, Pixels Modified: {pix_num}")
+    axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,2)}, Pixels Modified: {pix_num}")
     axes[0].axis('off')
     im = axes[0].imshow(input_image.reshape(28, 28), cmap='gray')
 
     axes[1].set_title("Confidence Scores")
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     _, adv_probs = predict_sample(model, input_image)
-    bars = axes[1].bar(digits, adv_probs)
+    bar_colors = ['blue'] * 10
+    bar_colors[input_label] = 'green'
+    bar_colors[target_label] = 'red'
+    bars = axes[1].bar(digits, adv_probs, color=bar_colors)
     # axes[1].xlabel("Digits")
     # axes[1].ylabel("Probability")
 
@@ -155,7 +216,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
 
         # get top 2 salient pixels
         _, top_2_indices = tf.math.top_k(tf.abs(saliency_map), k=2)
-        print("top_2_indices:", top_2_indices)
+        #print("top_2_indices:", top_2_indices)
 
         if top_2_indices[0] == 0:       # this basically means that there are no more salient pixels to choose from, aka the model was unable to make an adversarial example
             return adversarial_image, 0
@@ -166,13 +227,13 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
             modified_pixels = tf.tensor_scatter_nd_update(modified_pixels, [[pix]], [0])
             pix_num+=1
             
-        print("number of modified_pixels: ", pix_num)
+        #print("number of modified_pixels: ", pix_num)
 
         adversarial_image = update_adversarial_image(saliency_map, adversarial_image, top_2_indices, epsilon, convolutional)
         adversarial_image = tf.clip_by_value(adversarial_image, 0, 1)
 
         # Plot adversarial image
-        axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,1)}, Pixels Modified: {pix_num}")
+        axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,2)}, Pixels Modified: {pix_num}")
         adversarial_display = adversarial_image.numpy().reshape(28, 28)
         im.set_data(adversarial_display)
         
