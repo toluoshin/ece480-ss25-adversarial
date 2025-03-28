@@ -21,7 +21,7 @@ print("Loading MNIST dataset...")
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
 # Initialize model
-convolutional = True
+convolutional = False
 print("Loading the trained model...")
 if convolutional:
     model = tf.keras.models.load_model('cnn_model.keras')
@@ -49,7 +49,7 @@ root.geometry("%dx%d" % (width, height))
 # Initialize necessary variables
 success_matrix = [[0 for i in range(10)] for j in range(10)]
 digit_indices = [np.where(y_test == digit)[0] for digit in range(10)]
-epsilon = 1.0
+epsilon = 0.5
 
 # test_indices = np.random.choice(digit_indices[0], size=25, replace=False)
 # for element in test_indices:
