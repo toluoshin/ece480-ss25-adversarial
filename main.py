@@ -17,28 +17,28 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 NavigationToolbar2Tk) 
 
 
-def get_sample_by_digit(x_test, y_test, source_digit):
-    """
-    Get a sample image of the specified digit from the test set.
+# def get_sample_by_digit(x_test, y_test, source_digit):
+#     """
+#     Get a sample image of the specified digit from the test set.
 
-    Parameters:
-    x_test (numpy.ndarray): The test images dataset
-    y_test (numpy.ndarray): The test labels dataset
-    source_digit (int): The digit to find (0-9)
+#     Parameters:
+#     x_test (numpy.ndarray): The test images dataset
+#     y_test (numpy.ndarray): The test labels dataset
+#     source_digit (int): The digit to find (0-9)
 
-    Returns:
-    tuple: (sample_image, sample_label) where sample_image is the first instance
-           of the target digit found in the test set
-    """
-    # Find all indices where the label matches the target digit
-    digit_indices = np.where(y_test == source_digit)[0]
+#     Returns:
+#     tuple: (sample_image, sample_label) where sample_image is the first instance
+#            of the target digit found in the test set
+#     """
+#     # Find all indices where the label matches the target digit
+#     digit_indices = np.where(y_test == source_digit)[0]
 
-    if len(digit_indices) == 0:
-        raise ValueError(f"No instances of digit {source_digit} found")
+#     if len(digit_indices) == 0:
+#         raise ValueError(f"No instances of digit {source_digit} found")
 
-    # Select random index instead of first one
-    sample_idx = np.random.choice(digit_indices)
-    return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
+#     # Select random index instead of first one
+#     sample_idx = np.random.choice(digit_indices)
+#     return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
 
 
 def preprocess_uploaded_image(image_path, convolutional):
@@ -564,6 +564,52 @@ def main():
         # plt.tight_layout()
         # plt.show()
     
+    def get_mnist_input(input_panel, source_choice_window, x_test, y_test, source_digit):
+        """
+        Get a sample image of the specified digit from the test set.
+
+        Parameters:
+        x_test (numpy.ndarray): The test images dataset
+        y_test (numpy.ndarray): The test labels dataset
+        source_digit (int): The digit to find (0-9)
+
+        Returns:
+        tuple: (sample_image, sample_label) where sample_image is the first instance
+            of the target digit found in the test set
+        """
+        # Find all indices where the label matches the target digit
+        digit_indices = np.where(y_test == source_digit)[0]
+
+        if len(digit_indices) == 0:
+            raise ValueError(f"No instances of digit {source_digit} found")
+
+        # Select random index instead of first one
+        sample_idx = np.random.choice(digit_indices)
+        #return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
+        nonlocal input_image
+        input_image = x_test[sample_idx:sample_idx + 1]
+        display_input_image(input_panel)
+        # fig = Figure(figsize=(1,1))
+        # axes = fig.subplots(1,1)
+
+        # # Creating the Tkinter canvas containing the Matplotlib figure
+        # clear_screen(input_panel)
+        # canvas = FigureCanvasTkAgg(fig, master = input_panel)
+        # canvas.draw()
+        # canvas.get_tk_widget().pack(expand=True, fill='both')
+
+        # # setting title
+        # #plt.title("Live Adversarial Attack", fontsize=20)
+        # #fig.set_title(f"Input Image")
+        # #fig.axis('off')
+        # axes.set_title(f"Input Image")
+        # axes.axis('off')
+        # im = axes.imshow(input_image.reshape(28, 28), cmap='gray')
+
+        # source_choice_window.destroy()
+
+
+    
     
     # Initialize GUI
     root = tk.Tk()
@@ -571,6 +617,10 @@ def main():
     width= root.winfo_screenwidth()               
     height= root.winfo_screenheight()               
     root.geometry("%dx%d" % (width, height))
+
+    # input image
+    input_image = None
+
 
     # Welcome screen
     # clear_screen(root)
@@ -706,7 +756,7 @@ def main():
         def draw_option(target_label):
             # get image from drawing
             try:
-                processed_image = get_drawn_digit()
+                processed_image = get_drawn_digit(convolutional)
                 iteration_test(model, processed_image, target_label, root)
             except Exception as e:
                 print(f"Error processing image: {str(e)}")
@@ -714,7 +764,7 @@ def main():
         def picture_option(target_label):
             # Test with uploaded image or drawing
             try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg')
+                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
                 iteration_test(model, processed_image, target_label, root)
             except Exception as e:
                 print(f"Error processing image: {str(e)}")
@@ -841,7 +891,7 @@ def main():
 
         def draw_option(target_label, epsilon):
             try:
-                processed_image = get_drawn_digit()
+                processed_image = get_drawn_digit(convolutional)
                 pred, probs = predict_sample(model, processed_image)
                 specific_test(model, processed_image, pred, target_label, epsilon, root)
             except Exception as e:
@@ -849,7 +899,7 @@ def main():
 
         def picture_option(target_label, epsilon):
             try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg')
+                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
                 #print(processed_image)
                 pred, probs = predict_sample(model, processed_image)
                 specific_test(model, processed_image, pred, target_label, epsilon, root)
@@ -932,19 +982,65 @@ def main():
         # button6 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
         # button6.pack()
 
-        # Create the main application window
-        root = tk.Tk()
-        root.title("Adversarial Attacks")
-        width = root.winfo_screenwidth()
-        height = root.winfo_screenheight()
-        root.geometry("%dx%d" % (width, height))
+
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
+        nonlocal input_image
+
+        def run_iterate_attack(target):
+            return None
+
+        def run_specific_attack(target, epsilon):
+            nonlocal input_image
+            nonlocal attack_panel
+            pred, probs = predict_sample(model, input_image)
+            specific_test(model, input_image, pred, target, epsilon, attack_panel)
+
+        def load_iterate_parameters():
+            clear_screen(parameter_select_frame)
+            iterate_frame = Frame(parameter_select_frame, pady=5, bd=2, background="gray")
+            target_label = Label(iterate_frame, text="Target Class:", bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_label.pack()
+            target_dropdown = OptionMenu(iterate_frame, target_class, *valid_digits)
+            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_dropdown.pack()
+            iterate_frame.pack(pady=5, expand=True, fill="both")
+            nonlocal input_image
+        
+        def load_specific_parameters():
+            clear_screen(parameter_select_frame)
+            specific_frame = Frame(parameter_select_frame, pady=5, bd=2, background="gray")
+            target_label = Label(specific_frame, text="Target Class:", bg="gray", fg="black", font=("Arial", 15, "bold"))
+            target_label.pack()
+            target_dropdown = OptionMenu(specific_frame, target_class, *valid_digits)
+            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_dropdown.pack()
+            epsilon_label = Label(specific_frame, text="Epsilon:", bg="gray", fg="black", font=("Arial", 15, "bold"))
+            epsilon_label.pack()
+            epsilon_slider = tk.Scale(specific_frame, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200, bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            epsilon_slider.pack(padx=10)
+            specific_frame.pack(pady=5, expand=True, fill="both")
+
+            run_attack_btn = Button(specific_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
+                                                            float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 15, "bold"))
+            run_attack_btn.pack(pady=5)
+
+        def on_radio_change():
+            if iterate_var.get():
+                load_iterate_parameters()
+            else:
+                load_specific_parameters()
+
+
+        clear_screen(root)
 
         # Configure grid layout for the root window
         root.rowconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
         root.rowconfigure(1, weight=1)
         root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
         root.columnconfigure(1, weight=2)
-
+        
         # Function to create a panel with an inner box
         def create_panel(parent, row, column, rowspan=1, columnspan=1):
             outer_frame = Frame(parent, bg="gray", bd=2, relief="sunken")
@@ -959,53 +1055,126 @@ def main():
         digit_options = ['MNIST Digit', 'Draw Digit', 'Upload Image', 'Camera Capture']
 
         # Create top-left panel
-        top_left_panel = create_panel(root, row=0, column=0)
+        input_panel = create_panel(root, row=0, column=0)
 
-        # Configure the top_left_panel for centering
-        top_left_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
-        top_left_panel.grid_rowconfigure(tuple(range(len(digit_options))), weight=1)  # Distribute space equally
-
-        # # Create buttons in the top-left panel and center them
-        # for i, option in enumerate(digit_options):
-        #     button = tk.Button(top_left_panel, text=option, font=("Arial", 20, "bold"), command=lambda: print(option))
-        #     button.grid(row=i, column=0, pady=2, padx=2, sticky="nsew")  # Expands and centers
+        # Configure the input_panel for centering
+        input_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
+        input_panel.grid_rowconfigure(tuple(range(len(digit_options))), weight=1)  # Distribute space equally
 
         # Create buttons in the top-left panel and center them
-        mnist_btn = tk.Button(top_left_panel, text='MNIST Digit', font=("Arial", 20, "bold"))
+        mnist_btn = tk.Button(input_panel, text='Random Sample from MNIST Datset', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "mnist"))
         mnist_btn.grid(row=0, column=0, pady=2, padx=2, sticky="nsew")
 
-        draw_btn = tk.Button(top_left_panel, text='Draw Digit', font=("Arial", 20, "bold"))
+        draw_btn = tk.Button(input_panel, text='Draw Digit', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "draw"))
         draw_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
 
-        upload_btn = tk.Button(top_left_panel, text='Upload Image', font=("Arial", 20, "bold"),
-                               command=lambda: upload_image(top_left_panel))
+        upload_btn = tk.Button(input_panel, text='Upload Image', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "upload"))
         upload_btn.grid(row=2, column=0, pady=2, padx=2, sticky="nsew")
 
-        camera_btn = tk.Button(top_left_panel, text='Camera Capture', font=("Arial", 20, "bold"))
+        camera_btn = tk.Button(input_panel, text='Camera Capture', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "camera"))
         camera_btn.grid(row=3, column=0, pady=2, padx=2, sticky="nsew")
 
         # Create bottom-left panel
-        bottom_left_panel = create_panel(root, row=1, column=0)
+        parameter_panel = create_panel(root, row=1, column=0)
+        iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
+        iterate_option_frame.pack(fill="x", side="top")
+
+        instruction_label = tk.Label(master = iterate_option_frame, text="Choose whether to test a specific epsilon value or iterate through the whole range:", font=("Arial", 17, "bold")
+                                        , justify="center", background="gray", fg="black")#.grid(column=0, row=0)
+        instruction_label.pack(pady=5)
+        iterate_var = tk.BooleanVar(value = False)
+        radio_specific = Radiobutton(iterate_option_frame, text="Test specific", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 15, "bold"), command=on_radio_change)
+        radio_specific.pack()
+        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through all", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 15, "bold"), command=on_radio_change)
+        radio_iterate.pack()
+        parameter_select_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
+        parameter_select_frame.pack(fill="x", side="top")
+        load_specific_parameters()
+
         # Create right panel
-        right_panel = create_panel(root, row=0, column=1, rowspan=2)
+        attack_panel = create_panel(root, row=0, column=1, rowspan=2)
 
-        valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        # valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-        target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
+        # target_class = tk.StringVar()
+        # target_class.set(valid_digits[1])
 
-        target_label = ttk.Label(bottom_left_panel, text="Target Class:")
-        target_label.pack(pady=10, padx=10)
-        target_dropdown = ttk.OptionMenu(bottom_left_panel, target_class, *valid_digits)
-        target_dropdown.pack(pady=5, padx=5)
+        # target_label = ttk.Label(parameter_panel, text="Target Class:", background="gray")
+        # target_label.pack(pady=10, padx=10)
+        # target_dropdown = ttk.OptionMenu(parameter_panel, target_class, valid_digits[1], *valid_digits)
+        # target_dropdown.pack(pady=5, padx=5)
 
-        epsilon_label = ttk.Label(bottom_left_panel, text="Epsilon:")
-        epsilon_label.pack(pady=20)
-        epsilon_slider = tk.Scale(bottom_left_panel, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
-        epsilon_slider.pack()
+        # epsilon_label = ttk.Label(parameter_panel, text="Epsilon:", background="gray")
+        # epsilon_label.pack(pady=20)
+        # epsilon_slider = tk.Scale(parameter_panel, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+        # epsilon_slider.pack()
 
-        # Run the Tkinter main event loop
-        root.mainloop()
+        # # Run the Tkinter main event loop
+        # root.mainloop()
+    
+    def get_input_image(input_panel, method):
+        #clear_screen(input_panel)
+        nonlocal input_image
+        if method == "mnist":
+            source_choice_window = tk.Toplevel(root)
+            source_choice_window.title("Choose Source Class")            
+            source_choice_window.geometry("300x300")
+
+            source_choice = tk.StringVar(value=valid_digits[1])
+
+            source_label = ttk.Label(source_choice_window, text="Source Class:")
+            source_label.pack()
+            source_dropdown = ttk.OptionMenu(source_choice_window, source_choice, source_choice.get(),*valid_digits)
+            source_dropdown.pack()
+
+            # target_class = tk.StringVar()
+            # target_class.set(valid_digits[1])
+
+            # target_label = ttk.Label(source_choice_window, text="Target Class:")
+            # target_label.pack(pady=10, padx=10)
+            # target_dropdown = ttk.OptionMenu(source_choice_window, target_class, valid_digits[1], *valid_digits)
+            # target_dropdown.pack(pady=5, padx=5)
+
+            done_button = ttk.Button(source_choice_window, text="Select", command=lambda: get_mnist_input(input_panel, source_choice_window, x_test, y_test, int(source_choice.get())))
+            # done_button = ttk.Button(source_choice_window, text="Select", command=lambda: print("Val: ", source_digit.get()))
+            # def on_select():
+            #     print("Val:", source_choice.get())
+
+            # done_button = ttk.Button(source_choice_window, text="Select", command=on_select)
+            done_button.pack(pady=30)
+
+            source_choice_window.mainloop()
+
+
+            #sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit.get())
+        elif method == "draw":
+            input_image = get_drawn_digit(convolutional)
+            display_input_image(input_panel)
+
+
+        elif method == "upload":
+            file_path = filedialog.askopenfilename()
+            input_image = preprocess_uploaded_image(file_path, convolutional)
+            display_input_image(input_panel)
+
+        elif method == "camera":
+            input_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
+            display_input_image(input_panel)
+        
+
+    def display_input_image(input_panel):
+        fig = Figure(figsize=(1,1))
+        axes = fig.subplots(1,1)
+
+        clear_screen(input_panel)
+
+        canvas = FigureCanvasTkAgg(fig, master=input_panel)
+        canvas.get_tk_widget().pack(expand=True, fill='both')
+        canvas.draw()
+
+        axes.set_title(f"Input Image")
+        axes.axis('off')
+        im = axes.imshow(input_image.reshape(28, 28), cmap='gray')
 
     def first_load_menu(conv, train):
         nonlocal convolutional, train_model

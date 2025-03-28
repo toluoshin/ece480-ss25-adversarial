@@ -97,7 +97,7 @@ class DrawingWindow:
         return self.temp_path
 
 
-def get_drawn_digit():
+def get_drawn_digit(convo):
     """
     Opens drawing window and returns processed image using existing preprocessing
     """
@@ -113,8 +113,8 @@ def get_drawn_digit():
 
         # Use the existing preprocess_uploaded_image function
         from main import preprocess_uploaded_image
-        processed_image = preprocess_uploaded_image(window.temp_path)
-        print("here, processed_image: ", processed_image)
+        processed_image = preprocess_uploaded_image(window.temp_path, convolutional=convo)
+        #print("here, processed_image: ", processed_image)
 
         # Clean up
         os.remove(window.temp_path)
