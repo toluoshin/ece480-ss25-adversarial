@@ -521,7 +521,7 @@ def main():
 
         clear_screen(root)
         # menu button
-        menu_btn = ttk.Button(root, text="Back to Menu", command=lambda: load_menu())
+        menu_btn = ttk.Button(root, text="Reset!", command=lambda: load_menu())
         menu_btn.pack()
 
         fig = Figure(figsize=(1,1))
@@ -739,7 +739,7 @@ def main():
         button.pack(pady=5)
 
         # menu button
-        menu_btn = ttk.Button(test_mnist_iterate_frame, text="Back to Menu", command=lambda: load_menu())
+        menu_btn = ttk.Button(test_mnist_iterate_frame, text="Reset!", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -816,7 +816,7 @@ def main():
         picture_btn.pack(pady=5)
 
         # menu button
-        menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Back to Menu", command=lambda: load_menu())
+        menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Reset!", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -875,7 +875,7 @@ def main():
         button.pack(pady=10)
 
         # menu button
-        menu_btn = ttk.Button(test_mnist_specify_frame, text="Back to Menu", command=lambda: load_menu())
+        menu_btn = ttk.Button(test_mnist_specify_frame, text="Reset!", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
 
 
@@ -956,7 +956,7 @@ def main():
 
         # menu button
         #menu_frame = ttk.Frame(master=test_uploaded_specify_frame)
-        menu_btn = ttk.Button(test_uploaded_specify_frame, text="Back to Menu", command=lambda: load_menu())
+        menu_btn = ttk.Button(test_uploaded_specify_frame, text="Reset!", command=lambda: load_menu())
         menu_btn.pack(pady = 50)
         # menu_frame.pack(expand=True,fill="x")
 
@@ -989,7 +989,10 @@ def main():
         nonlocal input_image
 
         def run_iterate_attack(target):
-            return None
+            nonlocal input_image
+            nonlocal attack_panel
+            pred, probs = predict_sample(model, input_image)
+            iteration_test(model, input_image, target, attack_panel)
 
         def run_specific_attack(target, epsilon):
             nonlocal input_image
@@ -1003,28 +1006,37 @@ def main():
             target_label = Label(iterate_frame, text="Target Class:", bg ="gray", fg="black", font=("Arial", 15, "bold"))
             target_label.pack()
             target_dropdown = OptionMenu(iterate_frame, target_class, *valid_digits)
-            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 20, "bold"))
             target_dropdown.pack()
             iterate_frame.pack(pady=5, expand=True, fill="both")
-            nonlocal input_image
+            
+            iterate_button_frame = Frame(iterate_frame, pady=5, bd=2, background="gray")
+            iterate_button_frame.pack(expand=True, fill="both")
+
+            run_attack_btn = Button(iterate_frame, text="Run Attack!", command=lambda: run_iterate_attack(int(target_class.get())),
+                                             bg="gray", fg="black", font=("Arial", 30, "bold"))
+            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="both")
         
         def load_specific_parameters():
             clear_screen(parameter_select_frame)
             specific_frame = Frame(parameter_select_frame, pady=5, bd=2, background="gray")
-            target_label = Label(specific_frame, text="Target Class:", bg="gray", fg="black", font=("Arial", 15, "bold"))
+            target_label = Label(specific_frame, text="Target Class:", bg="gray", fg="black", font=("Arial", 25, "bold"))
             target_label.pack()
             target_dropdown = OptionMenu(specific_frame, target_class, *valid_digits)
-            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_dropdown.config(bg ="gray", fg="black", font=("Arial", 20, "bold"))
             target_dropdown.pack()
-            epsilon_label = Label(specific_frame, text="Epsilon:", bg="gray", fg="black", font=("Arial", 15, "bold"))
+            epsilon_label = Label(specific_frame, text="Epsilon:", bg="gray", fg="black", font=("Arial", 25, "bold"))
             epsilon_label.pack()
-            epsilon_slider = tk.Scale(specific_frame, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200, bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            epsilon_slider = tk.Scale(specific_frame, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200, bg ="gray", fg="black", font=("Arial", 25, "bold"))
             epsilon_slider.pack(padx=10)
             specific_frame.pack(pady=5, expand=True, fill="both")
 
-            run_attack_btn = Button(specific_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
-                                                            float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 15, "bold"))
-            run_attack_btn.pack(pady=5)
+            specific_button_frame = Frame(specific_frame, pady=5, bd=2, background="gray")
+            specific_button_frame.pack(expand=True, fill="both")
+
+            run_attack_btn = Button(specific_button_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
+                                                            float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 30, "bold"))
+            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="both")
 
         def on_radio_change():
             if iterate_var.get():
@@ -1079,16 +1091,16 @@ def main():
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         iterate_option_frame.pack(fill="x", side="top")
 
-        instruction_label = tk.Label(master = iterate_option_frame, text="Choose whether to test a specific epsilon value or iterate through the whole range:", font=("Arial", 17, "bold")
+        instruction_label = tk.Label(master = iterate_option_frame, text="Choose type of test:", font=("Arial", 25, "bold")
                                         , justify="center", background="gray", fg="black")#.grid(column=0, row=0)
         instruction_label.pack(pady=5)
         iterate_var = tk.BooleanVar(value = False)
-        radio_specific = Radiobutton(iterate_option_frame, text="Test specific", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 15, "bold"), command=on_radio_change)
+        radio_specific = Radiobutton(iterate_option_frame, text="Test specific epsilon", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 25, "bold"), command=on_radio_change)
         radio_specific.pack()
-        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through all", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 15, "bold"), command=on_radio_change)
+        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 25, "bold"), command=on_radio_change)
         radio_iterate.pack()
         parameter_select_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
-        parameter_select_frame.pack(fill="x", side="top")
+        parameter_select_frame.pack(expand="True",fill="both")
         load_specific_parameters()
 
         # Create right panel
