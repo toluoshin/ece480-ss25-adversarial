@@ -1028,16 +1028,16 @@ def main():
             target_dropdown.pack()
             epsilon_label = Label(specific_frame, text="Epsilon:", bg="gray", fg="black", font=("Arial", 25, "bold"))
             epsilon_label.pack()
-            epsilon_slider = tk.Scale(specific_frame, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200, bg ="gray", fg="black", font=("Arial", 25, "bold"))
+            epsilon_slider = tk.Scale(specific_frame, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200, bg ="gray", fg="black", font=("Arial", 15, "bold"))
             epsilon_slider.pack(padx=10)
-            specific_frame.pack(pady=5, expand=True, fill="both")
+            specific_frame.pack( expand=True, fill="both")
 
             specific_button_frame = Frame(specific_frame, pady=5, bd=2, background="gray")
             specific_button_frame.pack(expand=True, fill="both")
 
             run_attack_btn = Button(specific_button_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
                                                             float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="y")
+            run_attack_btn.pack(padx=20, pady=10, expand=True, fill="y")
             root.update_idletasks()
 
         def on_radio_change():
@@ -1075,8 +1075,10 @@ def main():
         input_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
         input_panel.grid_rowconfigure(tuple(range(len(digit_options)+1)), weight=1)  # Distribute space equally
 
-        input_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=("Arial", 25, "bold")
-                                        , justify="center", background="gray", fg="black")
+        underline_font = tk.font.Font(family="Arial", size=25, weight="bold", underline=1)
+
+        input_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=underline_font
+                                        , justify="center", background="gray", fg="black", underline=0)
         input_instruction_label.grid(row=0, column=0, pady=2, sticky="nsew")
 
         # Create buttons in the top-left panel and center them
@@ -1096,6 +1098,9 @@ def main():
 
         # Create bottom-left panel
         parameter_panel = create_panel(root, row=1, column=0)
+        parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=underline_font
+                                        , justify="center", background="gray", fg="black")
+        parameter_instruction_label.pack(pady=7)
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         iterate_option_frame.pack(fill="x", side="top")
 
@@ -1107,7 +1112,7 @@ def main():
         radio_specific.pack()
         radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_iterate.pack()
-        parameter_select_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
+        parameter_select_frame = Frame(parameter_panel, relief="sunken", bd=2, background="gray")
         parameter_select_frame.pack(expand="True",fill="both")
         parameter_panel.propagate(False)
         load_specific_parameters()
