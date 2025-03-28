@@ -1003,19 +1003,20 @@ def main():
         def load_iterate_parameters():
             clear_screen(parameter_select_frame)
             iterate_frame = Frame(parameter_select_frame, pady=5, bd=2, background="gray")
-            target_label = Label(iterate_frame, text="Target Class:", bg ="gray", fg="black", font=("Arial", 15, "bold"))
+            target_label = Label(iterate_frame, text="Target Class:", bg ="gray", fg="black", font=("Arial", 25, "bold"))
             target_label.pack()
             target_dropdown = OptionMenu(iterate_frame, target_class, *valid_digits)
             target_dropdown.config(bg ="gray", fg="black", font=("Arial", 20, "bold"))
             target_dropdown.pack()
             iterate_frame.pack(pady=5, expand=True, fill="both")
             
-            iterate_button_frame = Frame(iterate_frame, pady=5, bd=2, background="gray")
+            iterate_button_frame = Frame(iterate_frame, bd=2, background="gray")
             iterate_button_frame.pack(expand=True, fill="both")
 
             run_attack_btn = Button(iterate_frame, text="Run Attack!", command=lambda: run_iterate_attack(int(target_class.get())),
                                              bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="both")
+            run_attack_btn.pack(padx=20, pady=20)#, expand=True, fill="y")
+            root.update_idletasks()
         
         def load_specific_parameters():
             clear_screen(parameter_select_frame)
@@ -1036,7 +1037,8 @@ def main():
 
             run_attack_btn = Button(specific_button_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
                                                             float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="both")
+            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="y")
+            root.update_idletasks()
 
         def on_radio_change():
             if iterate_var.get():
@@ -1048,10 +1050,10 @@ def main():
         clear_screen(root)
 
         # Configure grid layout for the root window
-        root.rowconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
-        root.rowconfigure(1, weight=1)
-        root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
-        root.columnconfigure(1, weight=2)
+        root.rowconfigure(0, weight=1, minsize=200)  # Make top-left panel smaller
+        root.rowconfigure(1, weight=2)
+        root.columnconfigure(0, weight=2, minsize=200)  # Make top-left panel smaller
+        root.columnconfigure(1, weight=3)
         
         # Function to create a panel with an inner box
         def create_panel(parent, row, column, rowspan=1, columnspan=1):
@@ -1090,6 +1092,8 @@ def main():
         camera_btn = tk.Button(input_panel, text='Camera Capture', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "camera"))
         camera_btn.grid(row=4, column=0, pady=2, padx=2, sticky="nsew")
 
+        input_panel.grid_propagate(False)
+
         # Create bottom-left panel
         parameter_panel = create_panel(root, row=1, column=0)
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
@@ -1099,16 +1103,18 @@ def main():
                                         , justify="center", background="gray", fg="black")#.grid(column=0, row=0)
         instruction_label.pack(pady=5)
         iterate_var = tk.BooleanVar(value = False)
-        radio_specific = Radiobutton(iterate_option_frame, text="Test specific epsilon", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 25, "bold"), command=on_radio_change)
+        radio_specific = Radiobutton(iterate_option_frame, text="Test specific epsilon", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_specific.pack()
-        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 25, "bold"), command=on_radio_change)
+        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_iterate.pack()
         parameter_select_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         parameter_select_frame.pack(expand="True",fill="both")
+        parameter_panel.propagate(False)
         load_specific_parameters()
 
         # Create right panel
         attack_panel = create_panel(root, row=0, column=1, rowspan=2)
+        attack_panel.propagate(False)
 
         # valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
