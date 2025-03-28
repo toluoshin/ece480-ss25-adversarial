@@ -694,271 +694,271 @@ def main():
         # model.summary()
 
     
-    def test_mnist_iterate():
-        def mnist_iterate(source_digit, target_label):
-            try:
-                # Get a sample image of the requested digit
-                sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
-                iteration_test(model, sample_image, target_label, root)
-            except ValueError as e:
-                print(f"Error: {e}")
+    # def test_mnist_iterate():
+    #     def mnist_iterate(source_digit, target_label):
+    #         try:
+    #             # Get a sample image of the requested digit
+    #             sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
+    #             iteration_test(model, sample_image, target_label, root)
+    #         except ValueError as e:
+    #             print(f"Error: {e}")
 
-        # new_root.mainloop()
-        clear_screen(root)
+    #     # new_root.mainloop()
+    #     clear_screen(root)
     
-        # generate new frame
-        test_mnist_iterate_frame = ttk.Frame(root, padding=10)
-        test_mnist_iterate_frame.pack(expand=True, fill="x")
+    #     # generate new frame
+    #     test_mnist_iterate_frame = ttk.Frame(root, padding=10)
+    #     test_mnist_iterate_frame.pack(expand=True, fill="x")
 
-        # instruction label 1
-        instruction_label_1 = tk.Label(master = test_mnist_iterate_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
-        instruction_label_1.pack()
+    #     # instruction label 1
+    #     instruction_label_1 = tk.Label(master = test_mnist_iterate_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+    #     instruction_label_1.pack()
 
-        # source class entry
-        source_digit = tk.StringVar()
-        source_digit.set(valid_digits[0])
+    #     # source class entry
+    #     source_digit = tk.StringVar()
+    #     source_digit.set(valid_digits[0])
 
-        # target class entry
-        target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
+    #     # target class entry
+    #     target_class = tk.StringVar()
+    #     target_class.set(valid_digits[1])
 
-        source_label = ttk.Label(test_mnist_iterate_frame, text="Source Class:")
-        source_label.pack()
-        source_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, source_digit, *valid_digits)
-        source_dropdown.pack()
+    #     source_label = ttk.Label(test_mnist_iterate_frame, text="Source Class:")
+    #     source_label.pack()
+    #     source_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, source_digit, *valid_digits)
+    #     source_dropdown.pack()
 
-        target_label = ttk.Label(test_mnist_iterate_frame, text="Target Class:")
-        target_label.pack()
-        target_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, target_class, *valid_digits)
-        target_dropdown.pack()
+    #     target_label = ttk.Label(test_mnist_iterate_frame, text="Target Class:")
+    #     target_label.pack()
+    #     target_dropdown = ttk.OptionMenu(test_mnist_iterate_frame, target_class, *valid_digits)
+    #     target_dropdown.pack()
 
-        # Attack button
-        button = ttk.Button(master=test_mnist_iterate_frame, text="Run Attack!",
-                                command=lambda: mnist_iterate(int(source_digit.get()),
-                                                            int(target_class.get())))
-        button.pack(pady=5)
+    #     # Attack button
+    #     button = ttk.Button(master=test_mnist_iterate_frame, text="Run Attack!",
+    #                             command=lambda: mnist_iterate(int(source_digit.get()),
+    #                                                         int(target_class.get())))
+    #     button.pack(pady=5)
 
-        # menu button
-        menu_btn = ttk.Button(test_mnist_iterate_frame, text="Reset!", command=lambda: load_menu())
-        menu_btn.pack(pady = 50)
-
-
-    def test_uploaded_iterate():
-        def file_option(target_label):
-            # get image from file system
-            file_path = filedialog.askopenfilename()
-            try:
-                processed_image = preprocess_uploaded_image(file_path, convolutional)
-                iteration_test(model, processed_image, target_label, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")   
-
-        def draw_option(target_label):
-            # get image from drawing
-            try:
-                processed_image = get_drawn_digit(convolutional)
-                iteration_test(model, processed_image, target_label, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")
-
-        def picture_option(target_label):
-            # Test with uploaded image or drawing
-            try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
-                iteration_test(model, processed_image, target_label, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")
-
-        '''def base_picture_option(target_label):
-            # Test with uploaded images
-            try:
-                processed_image = upload_image_with_base('/home/designteam10/Pictures/image.jpg')
-                iteration_test(model, processed_image, target_label, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")'''
+    #     # menu button
+    #     menu_btn = ttk.Button(test_mnist_iterate_frame, text="Reset!", command=lambda: load_menu())
+    #     menu_btn.pack(pady = 50)
 
 
-        clear_screen(root)
+    # def test_uploaded_iterate():
+    #     def file_option(target_label):
+    #         # get image from file system
+    #         file_path = filedialog.askopenfilename()
+    #         try:
+    #             processed_image = preprocess_uploaded_image(file_path, convolutional)
+    #             iteration_test(model, processed_image, target_label, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")   
 
-        # generate new frame
-        test_uploaded_iterate_frame = ttk.Frame(root, padding=10)
-        test_uploaded_iterate_frame.pack(expand=True, fill="x")
+    #     def draw_option(target_label):
+    #         # get image from drawing
+    #         try:
+    #             processed_image = get_drawn_digit(convolutional)
+    #             iteration_test(model, processed_image, target_label, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")
 
-        # instruction label 1
-        instruction_label_1 = tk.Label(master = test_uploaded_iterate_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
-        instruction_label_1.pack()
+    #     def picture_option(target_label):
+    #         # Test with uploaded image or drawing
+    #         try:
+    #             processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
+    #             iteration_test(model, processed_image, target_label, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")
 
-        # target class entry
-        target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
-
-        input_frame1 = ttk.Frame(master=test_uploaded_iterate_frame)
-        target_label = ttk.Label(test_uploaded_iterate_frame, text="Target Class:")
-        target_label.pack()
-        target_dropdown = ttk.OptionMenu(test_uploaded_iterate_frame, target_class, *valid_digits)
-        target_dropdown.pack()
-        input_frame1.pack(pady=5)
-
-        # Instruction label 2
-        instruction_label_2 = tk.Label(master = test_uploaded_iterate_frame, text="Choose one of the options below to run the attack:", font=("Arial", 14), justify="center")
-        instruction_label_2.pack()
-
-        # Create upload button
-        upload_btn = ttk.Button(test_uploaded_iterate_frame, text="Upload Image", command=lambda: file_option(int(target_class.get())))
-        upload_btn.pack(pady=5)
-
-        # Draw digit button
-        draw_btn = ttk.Button(test_uploaded_iterate_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get())))
-        draw_btn.pack(pady=5)
-
-        # Take picture button
-        picture_btn = ttk.Button(test_uploaded_iterate_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get())))
-        picture_btn.pack(pady=5)
-
-        # menu button
-        menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Reset!", command=lambda: load_menu())
-        menu_btn.pack(pady = 50)
+    #     '''def base_picture_option(target_label):
+    #         # Test with uploaded images
+    #         try:
+    #             processed_image = upload_image_with_base('/home/designteam10/Pictures/image.jpg')
+    #             iteration_test(model, processed_image, target_label, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")'''
 
 
+    #     clear_screen(root)
 
-    def test_mnist_specify():
-        def mnist_specify(source_digit, target_label, epsilon):
-            try:
-                # Get a sample image of the requested digit
-                sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
-                specific_test(model, sample_image, sample_label[0], target_label, epsilon, root)
-            except ValueError as e:
-                print(f"Error: {e}")
+    #     # generate new frame
+    #     test_uploaded_iterate_frame = ttk.Frame(root, padding=10)
+    #     test_uploaded_iterate_frame.pack(expand=True, fill="x")
 
-        clear_screen(root)
+    #     # instruction label 1
+    #     instruction_label_1 = tk.Label(master = test_uploaded_iterate_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+    #     instruction_label_1.pack()
+
+    #     # target class entry
+    #     target_class = tk.StringVar()
+    #     target_class.set(valid_digits[1])
+
+    #     input_frame1 = ttk.Frame(master=test_uploaded_iterate_frame)
+    #     target_label = ttk.Label(test_uploaded_iterate_frame, text="Target Class:")
+    #     target_label.pack()
+    #     target_dropdown = ttk.OptionMenu(test_uploaded_iterate_frame, target_class, *valid_digits)
+    #     target_dropdown.pack()
+    #     input_frame1.pack(pady=5)
+
+    #     # Instruction label 2
+    #     instruction_label_2 = tk.Label(master = test_uploaded_iterate_frame, text="Choose one of the options below to run the attack:", font=("Arial", 14), justify="center")
+    #     instruction_label_2.pack()
+
+    #     # Create upload button
+    #     upload_btn = ttk.Button(test_uploaded_iterate_frame, text="Upload Image", command=lambda: file_option(int(target_class.get())))
+    #     upload_btn.pack(pady=5)
+
+    #     # Draw digit button
+    #     draw_btn = ttk.Button(test_uploaded_iterate_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get())))
+    #     draw_btn.pack(pady=5)
+
+    #     # Take picture button
+    #     picture_btn = ttk.Button(test_uploaded_iterate_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get())))
+    #     picture_btn.pack(pady=5)
+
+    #     # menu button
+    #     menu_btn = ttk.Button(test_uploaded_iterate_frame, text="Reset!", command=lambda: load_menu())
+    #     menu_btn.pack(pady = 50)
+
+
+
+    # def test_mnist_specify():
+    #     def mnist_specify(source_digit, target_label, epsilon):
+    #         try:
+    #             # Get a sample image of the requested digit
+    #             sample_image, sample_label = get_sample_by_digit(x_test, y_test, source_digit)
+    #             specific_test(model, sample_image, sample_label[0], target_label, epsilon, root)
+    #         except ValueError as e:
+    #             print(f"Error: {e}")
+
+    #     clear_screen(root)
     
-        # generate new frame
-        test_mnist_specify_frame = ttk.Frame(root, padding=10)
-        test_mnist_specify_frame.pack(expand=True, fill="x")
+    #     # generate new frame
+    #     test_mnist_specify_frame = ttk.Frame(root, padding=10)
+    #     test_mnist_specify_frame.pack(expand=True, fill="x")
 
-        # instruction label 1
-        instruction_label_1 = tk.Label(master = test_mnist_specify_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
-        instruction_label_1.pack()
+    #     # instruction label 1
+    #     instruction_label_1 = tk.Label(master = test_mnist_specify_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+    #     instruction_label_1.pack()
 
-        # source class entry
-        source_digit = tk.StringVar()
-        source_digit.set(valid_digits[0])
+    #     # source class entry
+    #     source_digit = tk.StringVar()
+    #     source_digit.set(valid_digits[0])
 
-        # target class entry
-        target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
+    #     # target class entry
+    #     target_class = tk.StringVar()
+    #     target_class.set(valid_digits[1])
 
-        source_label = ttk.Label(test_mnist_specify_frame, text="Source Class:")
-        source_label.pack()
-        source_dropdown = ttk.OptionMenu(test_mnist_specify_frame, source_digit, *valid_digits)
-        source_dropdown.pack()
+    #     source_label = ttk.Label(test_mnist_specify_frame, text="Source Class:")
+    #     source_label.pack()
+    #     source_dropdown = ttk.OptionMenu(test_mnist_specify_frame, source_digit, *valid_digits)
+    #     source_dropdown.pack()
 
-        target_label = ttk.Label(test_mnist_specify_frame, text="Target Class:")
-        target_label.pack()
-        target_dropdown = ttk.OptionMenu(test_mnist_specify_frame, target_class, *valid_digits)
-        target_dropdown.pack()
-
-
-        # epsilon entry
-        input_frame3 = ttk.Frame(master=test_mnist_specify_frame)
-        epsilon_label = ttk.Label(input_frame3, text="Epsilon:")
-        epsilon_label.pack()
-        epsilon_slider = tk.Scale(input_frame3, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
-        epsilon_slider.pack()
-        input_frame3.pack(pady=5)
-
-        # Attack button
-        button = ttk.Button(master=test_mnist_specify_frame, text="Run Attack!",
-                                command=lambda: mnist_specify(int(source_digit.get()),
-                                                            int(target_class.get()),
-                                                            float(epsilon_slider.get())))
-        button.pack(pady=10)
-
-        # menu button
-        menu_btn = ttk.Button(test_mnist_specify_frame, text="Reset!", command=lambda: load_menu())
-        menu_btn.pack(pady = 50)
+    #     target_label = ttk.Label(test_mnist_specify_frame, text="Target Class:")
+    #     target_label.pack()
+    #     target_dropdown = ttk.OptionMenu(test_mnist_specify_frame, target_class, *valid_digits)
+    #     target_dropdown.pack()
 
 
-    def test_uploaded_specify():
-        def file_option(target_label, epsilon):
-            file_path = filedialog.askopenfilename()
-            try:
-                processed_image = preprocess_uploaded_image(file_path, convolutional)
-                pred, probs = predict_sample(model, processed_image)
-                specific_test(model, processed_image, pred, target_label, epsilon, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")
+    #     # epsilon entry
+    #     input_frame3 = ttk.Frame(master=test_mnist_specify_frame)
+    #     epsilon_label = ttk.Label(input_frame3, text="Epsilon:")
+    #     epsilon_label.pack()
+    #     epsilon_slider = tk.Scale(input_frame3, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+    #     epsilon_slider.pack()
+    #     input_frame3.pack(pady=5)
 
-        def draw_option(target_label, epsilon):
-            try:
-                processed_image = get_drawn_digit(convolutional)
-                pred, probs = predict_sample(model, processed_image)
-                specific_test(model, processed_image, pred, target_label, epsilon, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")
+    #     # Attack button
+    #     button = ttk.Button(master=test_mnist_specify_frame, text="Run Attack!",
+    #                             command=lambda: mnist_specify(int(source_digit.get()),
+    #                                                         int(target_class.get()),
+    #                                                         float(epsilon_slider.get())))
+    #     button.pack(pady=10)
 
-        def picture_option(target_label, epsilon):
-            try:
-                processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
-                #print(processed_image)
-                pred, probs = predict_sample(model, processed_image)
-                specific_test(model, processed_image, pred, target_label, epsilon, root)
-            except Exception as e:
-                print(f"Error processing image: {str(e)}")
+    #     # menu button
+    #     menu_btn = ttk.Button(test_mnist_specify_frame, text="Reset!", command=lambda: load_menu())
+    #     menu_btn.pack(pady = 50)
 
-        clear_screen(root)
+
+    # def test_uploaded_specify():
+    #     def file_option(target_label, epsilon):
+    #         file_path = filedialog.askopenfilename()
+    #         try:
+    #             processed_image = preprocess_uploaded_image(file_path, convolutional)
+    #             pred, probs = predict_sample(model, processed_image)
+    #             specific_test(model, processed_image, pred, target_label, epsilon, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")
+
+    #     def draw_option(target_label, epsilon):
+    #         try:
+    #             processed_image = get_drawn_digit(convolutional)
+    #             pred, probs = predict_sample(model, processed_image)
+    #             specific_test(model, processed_image, pred, target_label, epsilon, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")
+
+    #     def picture_option(target_label, epsilon):
+    #         try:
+    #             processed_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
+    #             #print(processed_image)
+    #             pred, probs = predict_sample(model, processed_image)
+    #             specific_test(model, processed_image, pred, target_label, epsilon, root)
+    #         except Exception as e:
+    #             print(f"Error processing image: {str(e)}")
+
+    #     clear_screen(root)
     
-        # generate new frame
-        test_uploaded_specify_frame = ttk.Frame(root, padding=10)
-        test_uploaded_specify_frame.pack(expand=True, fill="x")
+    #     # generate new frame
+    #     test_uploaded_specify_frame = ttk.Frame(root, padding=10)
+    #     test_uploaded_specify_frame.pack(expand=True, fill="x")
 
-        # instruction label 1
-        instruction_label_1 = tk.Label(master = test_uploaded_specify_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
-        instruction_label_1.pack()
+    #     # instruction label 1
+    #     instruction_label_1 = tk.Label(master = test_uploaded_specify_frame, text="Enter in attack parameters:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+    #     instruction_label_1.pack()
 
-        # epsilon entry
-        input_frame1 = ttk.Frame(master=test_uploaded_specify_frame)
-        epsilon_label = ttk.Label(input_frame1, text="Epsilon:")
-        epsilon_label.pack()
-        epsilon_slider = tk.Scale(input_frame1, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
-        epsilon_slider.pack(padx=10)
-        input_frame1.pack(pady=5)
+    #     # epsilon entry
+    #     input_frame1 = ttk.Frame(master=test_uploaded_specify_frame)
+    #     epsilon_label = ttk.Label(input_frame1, text="Epsilon:")
+    #     epsilon_label.pack()
+    #     epsilon_slider = tk.Scale(input_frame1, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+    #     epsilon_slider.pack(padx=10)
+    #     input_frame1.pack(pady=5)
 
-        # target class entry
-        target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
+    #     # target class entry
+    #     target_class = tk.StringVar()
+    #     target_class.set(valid_digits[1])
 
-        input_frame3 = ttk.Frame(master=test_uploaded_specify_frame)
-        target_label = ttk.Label(input_frame3, text="Target Class:")
-        target_label.pack()
-        target_dropdown = ttk.OptionMenu(input_frame3, target_class, *valid_digits)
-        target_dropdown.pack()
-        input_frame3.pack(pady=5)
+    #     input_frame3 = ttk.Frame(master=test_uploaded_specify_frame)
+    #     target_label = ttk.Label(input_frame3, text="Target Class:")
+    #     target_label.pack()
+    #     target_dropdown = ttk.OptionMenu(input_frame3, target_class, *valid_digits)
+    #     target_dropdown.pack()
+    #     input_frame3.pack(pady=5)
 
-        # Instruction label 2
-        instruction_label_2 = tk.Label(master = test_uploaded_specify_frame, text="Choose one of the options below to run the attack:", font=("Arial", 14), justify="center")
-        instruction_label_2.pack()
+    #     # Instruction label 2
+    #     instruction_label_2 = tk.Label(master = test_uploaded_specify_frame, text="Choose one of the options below to run the attack:", font=("Arial", 14), justify="center")
+    #     instruction_label_2.pack()
 
-        # Create upload button
-        upload_btn = ttk.Button(test_uploaded_specify_frame, text="Upload Image", command=lambda: file_option(int(target_class.get()),
-                                                                                            float(epsilon_slider.get())))
-        upload_btn.pack(pady=5)
+    #     # Create upload button
+    #     upload_btn = ttk.Button(test_uploaded_specify_frame, text="Upload Image", command=lambda: file_option(int(target_class.get()),
+    #                                                                                         float(epsilon_slider.get())))
+    #     upload_btn.pack(pady=5)
 
-        # Draw digit button
-        draw_btn = ttk.Button(test_uploaded_specify_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get()),
-                                                                                        float(epsilon_slider.get())))
-        draw_btn.pack(pady=5)
+    #     # Draw digit button
+    #     draw_btn = ttk.Button(test_uploaded_specify_frame, text="Draw Digit", command=lambda: draw_option(int(target_class.get()),
+    #                                                                                     float(epsilon_slider.get())))
+    #     draw_btn.pack(pady=5)
 
-        # Take picture button
-        picture_btn = ttk.Button(test_uploaded_specify_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get()),
-                                                                                        float(epsilon_slider.get())))
-        picture_btn.pack(pady=5)
+    #     # Take picture button
+    #     picture_btn = ttk.Button(test_uploaded_specify_frame, text="Take Picture", command=lambda: picture_option(int(target_class.get()),
+    #                                                                                     float(epsilon_slider.get())))
+    #     picture_btn.pack(pady=5)
 
-        # menu button
-        #menu_frame = ttk.Frame(master=test_uploaded_specify_frame)
-        menu_btn = ttk.Button(test_uploaded_specify_frame, text="Reset!", command=lambda: load_menu())
-        menu_btn.pack(pady = 50)
-        # menu_frame.pack(expand=True,fill="x")
+    #     # menu button
+    #     #menu_frame = ttk.Frame(master=test_uploaded_specify_frame)
+    #     menu_btn = ttk.Button(test_uploaded_specify_frame, text="Reset!", command=lambda: load_menu())
+    #     menu_btn.pack(pady = 50)
+    #     # menu_frame.pack(expand=True,fill="x")
 
     # Option screen
     def load_menu():
