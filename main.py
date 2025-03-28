@@ -904,25 +904,100 @@ def main():
 
     # Option screen
     def load_menu():
-        clear_screen(root)
-        option_screen_frame = ttk.Frame(root, padding=10)
-        option_screen_frame.pack(expand=True, fill="x")
-        option_label = tk.Label(master = option_screen_frame, text="Choose an option:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
-        option_label.pack()
-        button1 = ttk.Button(master = option_screen_frame, text="Test MNIST digits across multiple epsilons", command=test_mnist_iterate)#.grid(column=0, row=1)
-        button1.pack(padx=20, pady=5)
-        button2 = ttk.Button(master = option_screen_frame, text="Test uploaded image across multiple epsilons", command=test_uploaded_iterate)#.grid(column=0, row=2)
-        button2.pack(padx=20, pady=5)
-        button3 = ttk.Button(master = option_screen_frame, text="Create an adversarial example for random number from MNIST dataset (specify max epsilon)", command=test_mnist_specify)#.grid(column=0, row=3)
-        button3.pack(padx=20, pady=5)
-        button4 = ttk.Button(master = option_screen_frame, text="Create an adversarial example for uploaded picture (specify max epsilon)", command=test_uploaded_specify)#.grid(column=0, row=4)
-        button4.pack(padx=20, pady=5)
-        tk.Label(master = option_screen_frame, text=" ", font=("Arial", 20), justify="center").pack()
-        button5 = ttk.Button(master = option_screen_frame, text="Choose new neural network model", command=lambda: load_welcome_screen())
-        button5.pack()
-        tk.Label(master = option_screen_frame, text=" ", font=("Arial", 6), justify="center").pack()
-        button6 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
-        button6.pack()
+        # clear_screen(root)
+        # option_screen_frame = ttk.Frame(root, padding=10)
+        # option_screen_frame.pack(expand=True, fill="x")
+        # option_label = tk.Label(master = option_screen_frame, text="Choose an option:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+        # option_label.pack()
+        # button1 = ttk.Button(master = option_screen_frame, text="Test MNIST digits across multiple epsilons", command=test_mnist_iterate)#.grid(column=0, row=1)
+        # button1.pack(padx=20, pady=5)
+        # button2 = ttk.Button(master = option_screen_frame, text="Test uploaded image across multiple epsilons", command=test_uploaded_iterate)#.grid(column=0, row=2)
+        # button2.pack(padx=20, pady=5)
+        # button3 = ttk.Button(master = option_screen_frame, text="Create an adversarial example for random number from MNIST dataset (specify max epsilon)", command=test_mnist_specify)#.grid(column=0, row=3)
+        # button3.pack(padx=20, pady=5)
+        # button4 = ttk.Button(master = option_screen_frame, text="Create an adversarial example for uploaded picture (specify max epsilon)", command=test_uploaded_specify)#.grid(column=0, row=4)
+        # button4.pack(padx=20, pady=5)
+        # tk.Label(master = option_screen_frame, text=" ", font=("Arial", 20), justify="center").pack()
+        # button5 = ttk.Button(master = option_screen_frame, text="Choose new neural network model", command=lambda: load_welcome_screen())
+        # button5.pack()
+        # tk.Label(master = option_screen_frame, text=" ", font=("Arial", 6), justify="center").pack()
+        # button6 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
+        # button6.pack()
+
+        # Create the main application window
+        root = tk.Tk()
+        root.title("Adversarial Attacks")
+        width = root.winfo_screenwidth()
+        height = root.winfo_screenheight()
+        root.geometry("%dx%d" % (width, height))
+
+        # Configure grid layout for the root window
+        root.rowconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
+        root.rowconfigure(1, weight=1)
+        root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
+        root.columnconfigure(1, weight=2)
+
+        # Function to create a panel with an inner box
+        def create_panel(parent, row, column, rowspan=1, columnspan=1):
+            outer_frame = Frame(parent, bg="gray", bd=2, relief="sunken")
+            outer_frame.grid(row=row, column=column, rowspan=rowspan, columnspan=columnspan, sticky="nsew", padx=5,
+                             pady=5)
+
+            inner_frame = Frame(outer_frame, bg="gray", bd=2, relief="ridge")
+            inner_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+            return inner_frame
+
+        digit_options = ['MNIST Digit', 'Draw Digit', 'Upload Image', 'Camera Capture']
+
+        # Create top-left panel
+        top_left_panel = create_panel(root, row=0, column=0)
+
+        # Configure the top_left_panel for centering
+        top_left_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
+        top_left_panel.grid_rowconfigure(tuple(range(len(digit_options))), weight=1)  # Distribute space equally
+
+        # # Create buttons in the top-left panel and center them
+        # for i, option in enumerate(digit_options):
+        #     button = tk.Button(top_left_panel, text=option, font=("Arial", 20, "bold"), command=lambda: print(option))
+        #     button.grid(row=i, column=0, pady=2, padx=2, sticky="nsew")  # Expands and centers
+
+        # Create buttons in the top-left panel and center them
+        mnist_btn = tk.Button(top_left_panel, text='MNIST Digit', font=("Arial", 20, "bold"))
+        mnist_btn.grid(row=0, column=0, pady=2, padx=2, sticky="nsew")
+
+        draw_btn = tk.Button(top_left_panel, text='Draw Digit', font=("Arial", 20, "bold"))
+        draw_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
+
+        upload_btn = tk.Button(top_left_panel, text='Upload Image', font=("Arial", 20, "bold"),
+                               command=lambda: upload_image(top_left_panel))
+        upload_btn.grid(row=2, column=0, pady=2, padx=2, sticky="nsew")
+
+        camera_btn = tk.Button(top_left_panel, text='Camera Capture', font=("Arial", 20, "bold"))
+        camera_btn.grid(row=3, column=0, pady=2, padx=2, sticky="nsew")
+
+        # Create bottom-left panel
+        bottom_left_panel = create_panel(root, row=1, column=0)
+        # Create right panel
+        right_panel = create_panel(root, row=0, column=1, rowspan=2)
+
+        valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+        target_class = tk.StringVar()
+        target_class.set(valid_digits[1])
+
+        target_label = ttk.Label(bottom_left_panel, text="Target Class:")
+        target_label.pack(pady=10, padx=10)
+        target_dropdown = ttk.OptionMenu(bottom_left_panel, target_class, *valid_digits)
+        target_dropdown.pack(pady=5, padx=5)
+
+        epsilon_label = ttk.Label(bottom_left_panel, text="Epsilon:")
+        epsilon_label.pack(pady=20)
+        epsilon_slider = tk.Scale(bottom_left_panel, from_=0.1, to=1.0, resolution=0.01, orient=HORIZONTAL, length=200)
+        epsilon_slider.pack()
+
+        # Run the Tkinter main event loop
+        root.mainloop()
 
     def first_load_menu(conv, train):
         nonlocal convolutional, train_model

@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import *
+from tkinter import Frame, Label
 from tkinter import filedialog
 from PIL import Image
 from PIL import ImageTk
@@ -59,7 +59,7 @@ mnist_btn.grid(row=0, column=0, pady=2, padx=2, sticky="nsew")
 draw_btn = tk.Button(top_left_panel, text='Draw Digit', font=("Arial", 20, "bold"))
 draw_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
 
-upload_btn = tk.Button(top_left_panel, text='Upload Image', font=("Arial", 20, "bold"), command=upload_image)
+upload_btn = tk.Button(top_left_panel, text='Upload Image', font=("Arial", 20, "bold"), command=lambda: upload_image(top_left_panel))
 upload_btn.grid(row=2, column=0, pady=2, padx=2, sticky="nsew")
 
 camera_btn = tk.Button(top_left_panel, text='Camera Capture', font=("Arial", 20, "bold"))
