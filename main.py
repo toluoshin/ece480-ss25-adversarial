@@ -1071,27 +1071,31 @@ def main():
 
         # Configure the input_panel for centering
         input_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
-        input_panel.grid_rowconfigure(tuple(range(len(digit_options))), weight=1)  # Distribute space equally
+        input_panel.grid_rowconfigure(tuple(range(len(digit_options)+1)), weight=1)  # Distribute space equally
+
+        input_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=("Arial", 25, "bold")
+                                        , justify="center", background="gray", fg="black")
+        input_instruction_label.grid(row=0, column=0, pady=2, sticky="nsew")
 
         # Create buttons in the top-left panel and center them
         mnist_btn = tk.Button(input_panel, text='Random Sample from MNIST Datset', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "mnist"))
-        mnist_btn.grid(row=0, column=0, pady=2, padx=2, sticky="nsew")
+        mnist_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
 
         draw_btn = tk.Button(input_panel, text='Draw Digit', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "draw"))
-        draw_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
+        draw_btn.grid(row=2, column=0, pady=2, padx=2, sticky="nsew")
 
         upload_btn = tk.Button(input_panel, text='Upload Image', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "upload"))
-        upload_btn.grid(row=2, column=0, pady=2, padx=2, sticky="nsew")
+        upload_btn.grid(row=3, column=0, pady=2, padx=2, sticky="nsew")
 
         camera_btn = tk.Button(input_panel, text='Camera Capture', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "camera"))
-        camera_btn.grid(row=3, column=0, pady=2, padx=2, sticky="nsew")
+        camera_btn.grid(row=4, column=0, pady=2, padx=2, sticky="nsew")
 
         # Create bottom-left panel
         parameter_panel = create_panel(root, row=1, column=0)
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         iterate_option_frame.pack(fill="x", side="top")
 
-        instruction_label = tk.Label(master = iterate_option_frame, text="Choose type of test:", font=("Arial", 25, "bold")
+        instruction_label = tk.Label(master = iterate_option_frame, text="Choose type of adversarial test:", font=("Arial", 25, "bold")
                                         , justify="center", background="gray", fg="black")#.grid(column=0, row=0)
         instruction_label.pack(pady=5)
         iterate_var = tk.BooleanVar(value = False)
