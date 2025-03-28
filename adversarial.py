@@ -186,13 +186,20 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         #     #other_digits_partial_derivative = tf.reduce_sum([jacobian[0, digit, 0, i, j, 0] for digit in range(10) if digit != target_label])
         #     #print("other_digits_partial_derivative: ", other_digits_partial_derivative)
 
-        #     if i not in modified_pixels and target_partial_derivative > 0 and other_digits_partial_derivative < 0:
+        #     if target_partial_derivative > 0 and other_digits_partial_derivative < 0:
         #         saliency_value = abs(target_partial_derivative * other_digits_partial_derivative * min(epsilon, 1-tf.reshape(adversarial_image, [-1])[i]))
         #         saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
-        #     elif i not in modified_pixels and target_partial_derivative < 0 and other_digits_partial_derivative > 0:
+        #     elif target_partial_derivative < 0 and other_digits_partial_derivative > 0:
         #         saliency_value = target_partial_derivative * other_digits_partial_derivative * min(epsilon, tf.reshape(adversarial_image, [-1])[i])
         #         saliency_map = tf.tensor_scatter_nd_update(saliency_map, [[i]], [saliency_value])
-            #print("saliency_map[i,j]: ", saliency_map[i,j])
+        #     #print("saliency_map[i,j]: ", saliency_map[i,j])
+        
+        # mask = (input_image > 0.05)  # Create mask near non-zero pixels
+        # mask = tf.cast(tf.reshape(mask, [-1]), dtype=saliency_map.dtype)  # Ensure dtype compatibility
+        # mask = tf.cast(mask, dtype=saliency_map.dtype)  # Ensure dtype compatibility
+        # saliency_map = saliency_map * mask * modified_pixels
+
+        #===================================================================
         target_pd = jacobian[0, target_label, 0, :]
         all_pd = jacobian[0, :, 0, :]
 
@@ -212,6 +219,8 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         mask = tf.cast(tf.reshape(mask, [-1]), dtype=saliency_map.dtype)  # Ensure dtype compatibility
         mask = tf.cast(mask, dtype=saliency_map.dtype)  # Ensure dtype compatibility
         saliency_map = saliency_map * mask * modified_pixels
+
+        # ==================================================================
         #print("saliency_map: ", saliency_map)
 
         # get top 2 salient pixels

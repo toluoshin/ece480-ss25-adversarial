@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -419,8 +420,12 @@ def main():
 
     def specific_test(model, sample_image, sample_label, target_label, epsilon, root):
         print(f"\nGenerating adversarial example for digit: {sample_label} using Saliency map")
+        start = time.perf_counter()
         adversarial_image, num_pixels_changed= create_adversarial_example_saliency(root, model, sample_image, sample_label,
                                                                 target_label, epsilon, 0, convolutional)
+        end = time.perf_counter()
+
+        print(f"Adversarial example generation took {(end - start):.3f} seconds.")
 
         # Get predictions
         original_pred, original_probs = predict_sample(model, sample_image)
@@ -450,7 +455,7 @@ def main():
         # Visualize the results
         difference = adversarial_image - sample_image
         _, adv_probs = predict_sample(model, adversarial_image)
-        plot_images(root, sample_image, adversarial_image, difference, adv_probs)
+        plot_images(root, sample_image, sample_label, adversarial_image, target_label, difference, adv_probs)
 
 
 
@@ -499,7 +504,7 @@ def main():
         # Keep both windows open until any key is pressed
         plt.show()
     
-    def plot_images(root, original, adversarial, difference, adv_probs):
+    def plot_images(root, original, input_label, adversarial, target_label, difference, adv_probs):
         """Plot the original image, adversarial image, and their difference."""
         # Convert to numpy if tensor
         if tf.is_tensor(original):
@@ -550,7 +555,10 @@ def main():
 
         axes[1,1].set_title("Confidence Scores")
         digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        bars = axes[1,1].bar(digits, adv_probs)
+        bar_colors = ['blue'] * 10
+        bar_colors[input_label] = 'green'
+        bar_colors[target_label] = 'red'
+        axes[1,1].bar(digits, adv_probs, color=bar_colors)
 
         fig.tight_layout()
         # plt.tight_layout()
