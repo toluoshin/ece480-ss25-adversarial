@@ -71,6 +71,37 @@ def preprocess_uploaded_image(image_path, convolutional):
     except Exception as e:
         raise ValueError(f"Error processing image: {str(e)}")
 
+'''def upload_image_with_base(base_image_path,new_image_path):
+    try:
+        # Load and convert image to grayscale
+        img_b = Image.open(base_image_path).convert('L')
+        img_n = Image.open(new_image_path).convert('L')
+
+        # Resize to 28x28
+        img_b = img_b.resize((28, 28), Image.Resampling.LANCZOS)
+        img_n = img_n.resize((28, 28), Image.Resampling.LANCZOS)
+
+        # Convert to numpy array and normalize
+        img_array_b = np.array(img_b, dtype=np.float32)
+        img_array_b = img_array_b / 255.0
+        img_array_n = np.array(img_n, dtype=np.float32)
+        img_array_n = img_array_n / 255.0
+
+        # Invert if necessary (MNIST has white digits on black background)
+        if img_array_b.mean() > 0.5:
+            img_array_b = 1 - img_array_b
+        if img_array_n.mean() > 0.5:
+            img_array_n = 1 - img_array_n
+
+        # Subtract pixels using Matrix/Array subtraction
+        result_array = np.subtract(img_array_n, img_array_b)
+
+        # Flatten the array for model input
+        result_array = result_array.reshape(1, 784)
+
+        return img_array_n
+    except Exception as e:
+        raise ValueError(f"Error processing image: {str(e)}")'''
 
 def plot_uploaded_comparison(uploaded_image, adversarial_image=None):
     """Plot the uploaded image and its adversarial version if available."""
@@ -320,7 +351,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
 
     # Create a new figure with a specific figure number
-    fig = plt.figure(num=2, figsize=(20, 20))
+    fig = plt.figure(num=2, figsize=(10, 7))
     # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
 
     # Case 1: Minimum epsilon successful case
@@ -339,6 +370,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[0, 2].axis('off')
 
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    axes[0, 3].set_title("Confidence Scores")
     axes[0, 3].bar(digits, min_epsilon_confidence)
 
     # Case 2: Minimum pixel count successful case
@@ -354,6 +386,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[1, 2].set_title("Perturbation (Min Top N)")
     axes[1, 2].axis('off')
 
+    axes[1, 3].set_title("Confidence Scores")
     axes[1, 3].bar(digits, min_top_n_confidence)
 
     # Case 3: Minimum distortion successful case
@@ -369,6 +402,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 2].set_title("Perturbation (Min Top N)")
     axes[2, 2].axis('off')
 
+    axes[2, 3].set_title("Confidence Scores")
     axes[2, 3].bar(digits, min_distortion_confidence)
 
     plt.tight_layout()
@@ -676,6 +710,14 @@ def main():
                 iteration_test(model, processed_image, target_label, root)
             except Exception as e:
                 print(f"Error processing image: {str(e)}")
+
+        '''def base_picture_option(target_label):
+            # Test with uploaded images
+            try:
+                processed_image = upload_image_with_base('/home/designteam10/Pictures/image.jpg')
+                iteration_test(model, processed_image, target_label, root)
+            except Exception as e:
+                print(f"Error processing image: {str(e)}")'''
 
 
         clear_screen(root)
