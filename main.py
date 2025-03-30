@@ -390,7 +390,8 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     bar_colors = ['blue'] * 10
     bar_colors[original_label[0]] = 'green'
     bar_colors[target_label[0]] = 'red'
-    axes[0, 3].bar(digits, min_distortion_confidence, color=bar_colors)
+    min_epsilon_confidence = [v * 100 for v in min_epsilon_confidence]
+    axes[0, 3].bar(digits, min_epsilon_confidence, color=bar_colors)
 
     # Case 2: Minimum pixel count successful case
     axes[1, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
@@ -407,11 +408,12 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[1, 2].set_title("Perturbation")
     axes[1, 2].axis('off')
 
-    axes[1, 3].set_title("Confidence Scores")
+    axes[1, 3].set_title("Confidence Scores (%)")
     bar_colors = ['blue'] * 10
     bar_colors[original_label[0]] = 'green'
     bar_colors[target_label[0]] = 'red'
-    axes[1, 3].bar(digits, min_distortion_confidence, color=bar_colors)
+    min_top_n_confidence = [v * 100 for v in min_top_n_confidence]
+    axes[1, 3].bar(digits, min_top_n_confidence, color=bar_colors)
 
     # Case 3: Minimum distortion successful case
     axes[2, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
@@ -428,10 +430,11 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 2].set_title("Perturbation")
     axes[2, 2].axis('off')
 
-    axes[2, 3].set_title("Confidence Scores")
+    axes[2, 3].set_title("Confidence Scores (%)")
     bar_colors = ['blue'] * 10
     bar_colors[original_label[0]] = 'green'
     bar_colors[target_label[0]] = 'red'
+    min_distortion_confidence = [v * 100 for v in min_distortion_confidence]
     axes[2, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
     fig.tight_layout()
@@ -540,17 +543,24 @@ def main():
         reset_btn = Button(root, text="Reset!", command=lambda: load_menu(),
                   bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
         reset_btn.pack(pady=5)#, expand=True, fill="y")
+        
+        # style = ttk.Style()
+        # style.theme_use('default')
 
+        # # # Use the default "gray" color
+        # style.configure('TNotebook', background='gray')              # Tab bar background
+        # style.configure('TNotebook.Tab', background='gray')          # Inactive tabs
+        # style.map('TNotebook.Tab', background=[('selected', 'light gray')])  # Selected tab
 
         tabControl = ttk.Notebook(root)
 
         #tab1 = ttk.Frame(tabControl)
-        tab2 = ttk.Frame(tabControl)
-        tab3 = ttk.Frame(tabControl)
+        tab2 = Frame(tabControl, background="gray")
+        tab3 = Frame(tabControl, background="gray")
         # tab2 = Frame(tabControl, bg="gray", bd=2, relief="sunken")
         # tab3 = Frame(tabControl, bg="gray", bd=2, relief="sunken")
 
-        # tabControl.add(tab1, text='Adversarial Image')
+        #tabControl.add(tab1, text='Adversarial Image')
         tabControl.add(tab2, text='Success Rates')
         tabControl.add(tab3, text='Best Cases')
 
@@ -629,11 +639,12 @@ def main():
         axes[1,0].axis('off')
         fig.colorbar(im3, ax=axes[1,0])
 
-        axes[1,1].set_title("Confidence Scores")
+        axes[1,1].set_title("Confidence Scores (%)")
         digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         bar_colors = ['blue'] * 10
         bar_colors[input_label] = 'green'
         bar_colors[target_label] = 'red'
+        adv_probs = [v * 100 for v in adv_probs]
         axes[1,1].bar(digits, adv_probs, color=bar_colors)
 
         fig.tight_layout()
