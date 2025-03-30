@@ -1057,6 +1057,7 @@ def main():
         target_class.set(valid_digits[0])
 
         nonlocal input_image
+        nonlocal convolutional
         input_image = None
 
         def run_iterate_attack(target):
@@ -1216,15 +1217,18 @@ def main():
 
         # Create right panel
         attack_panel = create_panel(root, row=0, column=1, rowspan=3)
-        matrix_image = Image.open("Images/matrix.png")
-        matrix_image = matrix_image.resize((825,660))
+        if convolutional:
+            matrix_image = Image.open("Images/cnn_matrix.png")
+        else:
+            matrix_image = Image.open("Images/mlp_matrix.png")
+        matrix_image = matrix_image.resize((700,560))
         photo = ImageTk.PhotoImage(matrix_image)
-        attack_caption_label = tk.Label(master = attack_panel, text="Adversarial Attack Performance Matrix", font=("Arial", 25, "bold")
+        attack_caption_label = tk.Label(master = attack_panel, text="This heatmap shows the success rate (%) of the\nadversarial attack algorithm across all source-target\nclass pairs against this type of neural network model.\n\nEach cell reflects how often inputs from a given\nsource class (x-axis) can be altered into a specific\ntarget class (y-axis) using adversarial perturbations.\nDarker colors indicate higher attack success rates.\n\nUse this matrix to understand how your selected\ninput image and target class affect the overall\nlikelihood of a successful attack.", font=("Arial", 15, "bold")
                                         , justify="center", background="gray", fg="black")
         attack_matrix_label = tk.Label(master = attack_panel, image=photo
                                         , justify="center", background="gray")
         attack_matrix_label.image = photo
-        attack_caption_label.pack(pady=40)
+        attack_caption_label.pack(pady=10)
         attack_matrix_label.pack(expand=True, fill="y")
         attack_panel.propagate(False)
 
