@@ -1057,6 +1057,7 @@ def main():
         target_class.set(valid_digits[1])
 
         nonlocal input_image
+        input_image = None
 
         def run_iterate_attack(target):
             nonlocal input_image
@@ -1226,13 +1227,18 @@ def main():
         if method == "mnist":
             source_choice_window = tk.Toplevel(root)
             source_choice_window.title("Choose Source Class")            
-            source_choice_window.geometry("300x300")
+            source_choice_window.geometry("300x200")
 
             source_choice = tk.StringVar(value=valid_digits[1])
 
-            source_label = ttk.Label(source_choice_window, text="Source Class:")
+            source_choice_frame = Frame(source_choice_window, pady=5, bd=2, background="gray")
+
+            #source_label = ttk.Label(source_choice_frame, text="Source Class:")
+            source_label = tk.Label(master = source_choice_frame, text="Source Class:", font=("Arial", 25, "bold")
+                                        , justify="center", background="gray", fg="black")
             source_label.pack()
-            source_dropdown = ttk.OptionMenu(source_choice_window, source_choice, source_choice.get(),*valid_digits)
+            source_dropdown = OptionMenu(source_choice_frame, source_choice, source_choice.get(),*valid_digits)
+            source_dropdown.config(bg ="gray", fg="black", font=("Arial", 20, "bold"))
             source_dropdown.pack()
 
             # target_class = tk.StringVar()
@@ -1243,7 +1249,9 @@ def main():
             # target_dropdown = ttk.OptionMenu(source_choice_window, target_class, valid_digits[1], *valid_digits)
             # target_dropdown.pack(pady=5, padx=5)
 
-            done_button = ttk.Button(source_choice_window, text="Select", command=lambda: get_mnist_input(input_panel, source_choice_window, x_test, y_test, int(source_choice.get())))
+            #done_button = ttk.Button(source_choice_frame, text="Select", command=lambda: get_mnist_input(input_panel, source_choice_window, x_test, y_test, int(source_choice.get())))
+            done_button = Button(source_choice_frame, text="Select!", command=lambda: get_mnist_input(input_panel, source_choice_window, x_test, y_test, int(source_choice.get())),
+                                     bg="gray", fg="black", font=("Arial", 30, "bold"))
             # done_button = ttk.Button(source_choice_window, text="Select", command=lambda: print("Val: ", source_digit.get()))
             # def on_select():
             #     print("Val:", source_choice.get())
@@ -1251,6 +1259,7 @@ def main():
             # done_button = ttk.Button(source_choice_window, text="Select", command=on_select)
             done_button.pack(pady=30)
 
+            source_choice_frame.pack(expand=True, fill="both")
             source_choice_window.mainloop()
 
 
@@ -1308,8 +1317,12 @@ def main():
             # Create window
             countdown_window = tk.Toplevel()
             countdown_window.title("Countdown Timer")
-            timer_label = tk.Label(countdown_window, text="Countdown timer for base picture!", font=("Helvetica", 25))
+            countdown_frame = Frame(countdown_window, bd=2, background="gray")
+            timer_label = tk.Label(master = countdown_frame, text="Countdown timer for base picture!", font=("Arial", 25, "bold")
+                                        , justify="center", background="gray", fg="black")
+            #timer_label = tk.Label(countdown_frame, text="Countdown timer for base picture!", font=("Helvetica", 25))
             timer_label.pack(pady=20, expand=True)#, anchor="center")
+            countdown_frame.pack(expand=True, fill="both")
             countdown_window.geometry("450x100")
 
             # start countdowns
@@ -1357,6 +1370,7 @@ def main():
         
         clear_screen(root)
         welcome_screen_frame = ttk.Frame(root, padding=10)
+        #welcome_screen_frame = Frame(root, bd=2, background="gray")
         welcome_screen_frame.pack(expand=True, fill="x")
         welcome_label = tk.Label(master = welcome_screen_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 14), justify="center")
         welcome_label.pack(pady=5)
