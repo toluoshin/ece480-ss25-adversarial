@@ -1095,7 +1095,7 @@ def main():
 
             run_attack_btn = Button(iterate_frame, text="Run Attack!", command=lambda: run_iterate_attack(int(target_class.get())),
                                              bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="y")
+            run_attack_btn.pack(padx=20, pady=20, expand=True)#, fill="y")
             root.update_idletasks()
         
         def load_specific_parameters():
@@ -1117,7 +1117,7 @@ def main():
 
             run_attack_btn = Button(specific_button_frame, text="Run Attack!", command=lambda: run_specific_attack(int(target_class.get()),
                                                             float(epsilon_slider.get())), bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=10, expand=True, fill="y")
+            run_attack_btn.pack(padx=20, pady=10, expand=True)#, fill="y")
             root.update_idletasks()
 
         def on_radio_change():
