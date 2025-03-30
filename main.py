@@ -233,7 +233,7 @@ def plot_confidence_text(min_epsilon_predictions, min_topn_predictions, min_dist
     plt.axis('off')  # Hide axes
     plt.show(block=False)
 
-def plot_success_rate(success_rates, block=False):
+def plot_success_rate(success_rates, root):
     # Convert success rates to a format that can be plotted
     epsilon_values = np.arange(0.1, 1.1, 0.1)
     top_n_values = range(5, 201, 5)
@@ -251,21 +251,27 @@ def plot_success_rate(success_rates, block=False):
     else:
         success_matrix = np.zeros_like(success_matrix)
 
-    # Create a new figure with a specific figure number
-    plt.figure(num=1, figsize=(10, 6))
-    plt.imshow(success_matrix, cmap='YlGnBu', aspect='auto', origin='lower')
+    # Create a figure
+    fig, ax = plt.subplots(figsize=(10, 6))
+    cax = ax.imshow(success_matrix, cmap='YlGnBu', aspect='auto', origin='lower')
 
-    plt.colorbar(label="Success Rate")
-    plt.xticks(np.arange(len(epsilon_values)), [f'{epsilon:.1f}' for epsilon in epsilon_values])
-    plt.yticks(np.arange(len(top_n_values)), [str(top_n) for top_n in top_n_values])
-    plt.xlabel("Epsilon Value")
-    plt.ylabel("Top N Pixels Perturbed")
-    plt.title("Success Rate of Adversarial Attack Using Saliency Map")
-    plt.tight_layout()
-    plt.show(block=block)
+    fig.colorbar(cax, label="Success Rate")
+    ax.set_xticks(np.arange(len(epsilon_values)))
+    ax.set_xticklabels([f'{epsilon:.1f}' for epsilon in epsilon_values])
+    ax.set_yticks(np.arange(len(top_n_values)))
+    ax.set_yticklabels([str(top_n) for top_n in top_n_values])
+    ax.set_xlabel("Epsilon Value")
+    ax.set_ylabel("Top N Pixels Perturbed")
+    ax.set_title("Success Rate of Adversarial Attack Using Saliency Map")
+    fig.tight_layout()
+
+    # Embed the plot in the tkinter frame
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 
-def plot_min_success_cases(success_rates, model, original_image, original_label, target_label):
+def plot_min_success_cases(success_rates, model, original_image, original_label, target_label, root):
     """
     Plot two cases:
     1. Minimum epsilon required for a successful adversarial attack
@@ -407,7 +413,11 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 3].bar(digits, min_distortion_confidence)
 
     plt.tight_layout()
-    plt.show(block=True)
+
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
 
 
 def clear_screen(root):
@@ -416,7 +426,7 @@ def clear_screen(root):
 
 
 def main():
-    valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    valid_digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
     def specific_test(model, sample_image, sample_label, target_label, epsilon, root):
         print(f"\nGenerating adversarial example for digit: {sample_label} using Saliency map")
@@ -460,6 +470,17 @@ def main():
 
 
     def iteration_test(model, processed_image, target_label, root):
+
+        tabControl = ttk.Notebook(root)
+
+        tab1 = ttk.Frame(tabControl)
+        tab2 = ttk.Frame(tabControl)
+        tab3 = ttk.Frame(tabControl)
+
+        tabControl.add(tab1, text='Adversarial Image')
+        tabControl.add(tab2, text='Success Rates')
+        tabControl.add(tab3, text='All Cases')
+
         # Get prediction for original image
         original_pred, original_probs = predict_sample(model, processed_image)
         print("\nOriginal Prediction:")
@@ -474,7 +495,7 @@ def main():
         for epsilon in np.arange(0.1, 1.1, 0.1):
             #print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
             print(f"Testing epsilon={epsilon:.1f}")
-            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(root, model, processed_image, original_pred,
+            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(tab1, model, processed_image, original_pred,
                                                                     target_label, epsilon, 150, convolutional)
             # Get prediction for adversarial image
             original_pred, original_probs = predict_sample(model, processed_image)
@@ -494,15 +515,17 @@ def main():
                 else:
                     success_rates.append((epsilon, n, distortion, success, adv_probs, adversarial_image))
 
+        tabControl.pack(expand=True, fill='both')
+
         # Plot success rate heatmap first, with block=False
-        plot_success_rate(success_rates, block=False)
+        plot_success_rate(success_rates, tab2)
 
         # Plot minimum success cases second, with block=True
         plot_min_success_cases(success_rates, model, processed_image, np.array([original_pred]),
-                                [target_label])
+                                [target_label], tab3)
 
         # Keep both windows open until any key is pressed
-        plt.show()
+        #plt.show()
     
     def plot_images(root, original, input_label, adversarial, target_label, difference, adv_probs):
         """Plot the original image, adversarial image, and their difference."""
@@ -1015,7 +1038,7 @@ def main():
 
             run_attack_btn = Button(iterate_frame, text="Run Attack!", command=lambda: run_iterate_attack(int(target_class.get())),
                                              bg="gray", fg="black", font=("Arial", 30, "bold"))
-            run_attack_btn.pack(padx=20, pady=20)#, expand=True, fill="y")
+            run_attack_btn.pack(padx=20, pady=20, expand=True, fill="y")
             root.update_idletasks()
         
         def load_specific_parameters():
@@ -1075,14 +1098,14 @@ def main():
         input_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
         input_panel.grid_rowconfigure(tuple(range(len(digit_options)+1)), weight=1)  # Distribute space equally
 
-        underline_font = tk.font.Font(family="Arial", size=25, weight="bold", underline=1)
+        # underline_font = tk.font.Font(family="Arial", size=25, weight="bold", underline=1)
 
-        input_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=underline_font
+        input_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=("Arial", 20, "bold")
                                         , justify="center", background="gray", fg="black", underline=0)
         input_instruction_label.grid(row=0, column=0, pady=2, sticky="nsew")
 
         # Create buttons in the top-left panel and center them
-        mnist_btn = tk.Button(input_panel, text='Random Sample from MNIST Datset', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "mnist"))
+        mnist_btn = tk.Button(input_panel, text='Random Sample from MNIST Dataset', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "mnist"))
         mnist_btn.grid(row=1, column=0, pady=2, padx=2, sticky="nsew")
 
         draw_btn = tk.Button(input_panel, text='Draw Digit', font=("Arial", 20, "bold"), command=lambda:get_input_image(input_panel, "draw"))
@@ -1098,8 +1121,9 @@ def main():
 
         # Create bottom-left panel
         parameter_panel = create_panel(root, row=1, column=0)
-        parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=underline_font
+        parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=("Arial", 20, "bold")
                                         , justify="center", background="gray", fg="black")
+
         parameter_instruction_label.pack(pady=7)
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         iterate_option_frame.pack(fill="x", side="top")
@@ -1113,7 +1137,7 @@ def main():
         radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_iterate.pack()
         parameter_select_frame = Frame(parameter_panel, relief="sunken", bd=2, background="gray")
-        parameter_select_frame.pack(expand="True",fill="both")
+        parameter_select_frame.pack(expand=True,fill="both")
         parameter_panel.propagate(False)
         load_specific_parameters()
 
