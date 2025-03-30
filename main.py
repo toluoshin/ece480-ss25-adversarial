@@ -1054,7 +1054,7 @@ def main():
         #plt.close('all')
 
         target_class = tk.StringVar()
-        target_class.set(valid_digits[1])
+        target_class.set(valid_digits[0])
 
         nonlocal input_image
         input_image = None
@@ -1229,7 +1229,8 @@ def main():
             source_choice_window.title("Choose Source Class")            
             source_choice_window.geometry("300x200")
 
-            source_choice = tk.StringVar(value=valid_digits[1])
+            source_choice = tk.StringVar()
+            source_choice.set(valid_digits[0])
 
             source_choice_frame = Frame(source_choice_window, pady=5, bd=2, background="gray")
 
@@ -1237,7 +1238,7 @@ def main():
             source_label = tk.Label(master = source_choice_frame, text="Source Class:", font=("Arial", 25, "bold")
                                         , justify="center", background="gray", fg="black")
             source_label.pack()
-            source_dropdown = OptionMenu(source_choice_frame, source_choice, source_choice.get(),*valid_digits)
+            source_dropdown = OptionMenu(source_choice_frame, source_choice, *valid_digits)
             source_dropdown.config(bg ="gray", fg="black", font=("Arial", 20, "bold"))
             source_dropdown.pack()
 
