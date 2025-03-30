@@ -487,8 +487,8 @@ def main():
 
         # Visualize the results
         difference = adversarial_image - sample_image
-        _, adv_probs = predict_sample(model, adversarial_image)
-        plot_images(root, sample_image, sample_label, adversarial_image, target_label, difference, adv_probs)
+        #_, adv_probs = predict_sample(model, adversarial_image)
+        plot_images(root, sample_image, sample_label, adversarial_image, target_label, difference, adv_pred, adv_probs)
 
 
 
@@ -568,7 +568,7 @@ def main():
         # Keep both windows open until any key is pressed
         #plt.show()
     
-    def plot_images(root, original, input_label, adversarial, target_label, difference, adv_probs):
+    def plot_images(root, original, input_label, adversarial, target_label, difference, adv_pred, adv_probs):
         """Plot the original image, adversarial image, and their difference."""
         # Convert to numpy if tensor
         if tf.is_tensor(original):
@@ -591,11 +591,19 @@ def main():
                   bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
         reset_btn.pack(pady=5)#, expand=True, fill="y")
 
+        success_text = "Attack success!"
+        if (adv_pred != target_label):
+            success_text = "Attack was not successful."
+        success_frame = Frame(root, bd=2, background="gray", relief="sunken")
+        success_label = Label(success_frame, text=success_text, bg="gray", fg="black", font=("Arial", 25, "bold"))
+        success_label.pack(pady=2)
+        success_frame.pack(expand=True, fill="both")
+
         plt.clf()  
         fig = Figure(figsize=(10,7))
         #fig.patch.set_facecolor("none")
         axes = fig.subplots(2,2)
-        canvas = FigureCanvasTkAgg(fig, master = root)
+        canvas = FigureCanvasTkAgg(fig, master = success_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(anchor="center", expand=True, fill="both")
 
@@ -712,12 +720,13 @@ def main():
     model = None
     convolutional = None
     train_model = None
+    baseline_accuracy = 0
     
     def initialize_model():
         # Parameters
         # convolutional = False    # True: CNN, False: MLP
         # train_model = False       # True: training model, False: loading model
-        nonlocal x_train, x_test, convolutional, train_model, model
+        nonlocal x_train, x_test, convolutional, train_model, model, baseline_accuracy
 
         if convolutional:
             x_train = x_train.reshape((-1,28,28,1))
@@ -758,7 +767,8 @@ def main():
             else:
                 model = tf.keras.models.load_model('mlp_model.keras')
 
-        print("Model baseline accuracy: ", model.evaluate(x_test, y_test)[1]) 
+        baseline_accuracy = model.evaluate(x_test, y_test)[1]
+        print("Model baseline accuracy: ", baseline_accuracy) 
         # Show model architecture
         # model.summary()
 
@@ -1058,6 +1068,7 @@ def main():
 
         nonlocal input_image
         nonlocal convolutional
+        nonlocal baseline_accuracy
         input_image = None
 
         def run_iterate_attack(target):
@@ -1148,6 +1159,10 @@ def main():
             inner_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
             return inner_frame
+        
+        def quit_program(root):
+            root.destroy()
+            exit()
 
         digit_options = ['MNIST Digit', 'Draw Digit', 'Upload Image', 'Camera Capture']
 
@@ -1158,7 +1173,7 @@ def main():
         option_panel.grid_rowconfigure(0, weight=1)
         choose_model_button = tk.Button(option_panel, text='← Go Back to Welcome Screen', font=("Arial", 15, "bold"), command=lambda:load_welcome_screen())
         choose_model_button.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-        quit_button = tk.Button(option_panel, text='Quit Program', font=("Arial", 15, "bold"), command=lambda:root.destroy())
+        quit_button = tk.Button(option_panel, text='Quit Program', font=("Arial", 15, "bold"), command=lambda:quit_program(root))
         quit_button.grid(row=0, column=1, sticky="nsew", padx=2, pady=2)
         option_panel.grid_propagate(False)
         # model_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=("Arial", 20, "bold")
@@ -1219,11 +1234,13 @@ def main():
         attack_panel = create_panel(root, row=0, column=1, rowspan=3)
         if convolutional:
             matrix_image = Image.open("Images/cnn_matrix.png")
+            model_name = "CNN"
         else:
             matrix_image = Image.open("Images/mlp_matrix.png")
-        matrix_image = matrix_image.resize((700,560))
+            model_name = "MLP"
+        matrix_image = matrix_image.resize((660,528))
         photo = ImageTk.PhotoImage(matrix_image)
-        attack_caption_label = tk.Label(master = attack_panel, text="This heatmap shows the success rate (%) of the\nadversarial attack algorithm across all source-target\nclass pairs against this type of neural network model.\n\nEach cell reflects how often inputs from a given\nsource class (x-axis) can be altered into a specific\ntarget class (y-axis) using adversarial perturbations.\nDarker colors indicate higher attack success rates.\n\nUse this matrix to understand how your selected\ninput image and target class affect the overall\nlikelihood of a successful attack.", font=("Arial", 15, "bold")
+        attack_caption_label = tk.Label(master = attack_panel, text=f"{model_name} model baseline accuracy: {round(float(baseline_accuracy*100), 2)}%\n\nThis heatmap shows the success rate (%) of the\nadversarial attack algorithm across all source-target\nclass pairs against this type of neural network model.\n\nEach cell reflects how often inputs from a given\nsource class (x-axis) can be altered into a specific\ntarget class (y-axis) using adversarial perturbations.\nDarker colors indicate higher attack success rates.\n\nUse this matrix to understand how your selected\ninput image and target class affect the overall\nlikelihood of a successful attack.", font=("Arial", 15, "bold")
                                         , justify="center", background="gray", fg="black")
         attack_matrix_label = tk.Label(master = attack_panel, image=photo
                                         , justify="center", background="gray")
