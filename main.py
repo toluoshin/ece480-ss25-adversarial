@@ -1131,8 +1131,9 @@ def main():
         clear_screen(root)
 
         # Configure grid layout for the root window
-        root.rowconfigure(0, weight=1, minsize=200)  # Make top-left panel smaller
-        root.rowconfigure(1, weight=2)
+        root.rowconfigure(0, weight=2)  # Make top-left panel smalle
+        root.rowconfigure(1, weight=5, minsize=200)  # Make top-left panel smaller
+        root.rowconfigure(2, weight=16)
         root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
         root.columnconfigure(1, weight=2)
         
@@ -1149,8 +1150,22 @@ def main():
 
         digit_options = ['MNIST Digit', 'Draw Digit', 'Upload Image', 'Camera Capture']
 
-        # Create top-left panel
-        input_panel = create_panel(root, row=0, column=0)
+        # Create panel with options
+        option_panel = create_panel(root, row=0, column=0)
+        option_panel.grid_columnconfigure(0, weight=1)
+        option_panel.grid_columnconfigure(1, weight=1)
+        option_panel.grid_rowconfigure(0, weight=1)
+        choose_model_button = tk.Button(option_panel, text='← Go Back to Welcome Screen', font=("Arial", 15, "bold"), command=lambda:load_welcome_screen())
+        choose_model_button.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+        quit_button = tk.Button(option_panel, text='Quit Program', font=("Arial", 15, "bold"), command=lambda:root.destroy())
+        quit_button.grid(row=0, column=1, sticky="nsew", padx=2, pady=2)
+        option_panel.grid_propagate(False)
+        # model_instruction_label = tk.Label(master = input_panel, text="Choose input format:", font=("Arial", 20, "bold")
+        #                                 , justify="center", background="gray", fg="black", underline=0)
+        # input_instruction_label.grid(row=0, column=0, pady=2, sticky="nsew")
+
+        # Create input panel
+        input_panel = create_panel(root, row=1, column=0)
 
         # Configure the input_panel for centering
         input_panel.grid_columnconfigure(0, weight=1)  # Center align items horizontally
@@ -1178,7 +1193,7 @@ def main():
         input_panel.grid_propagate(False)
 
         # Create bottom-left panel
-        parameter_panel = create_panel(root, row=1, column=0)
+        parameter_panel = create_panel(root, row=2, column=0)
         parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=("Arial", 20, "bold")
                                         , justify="center", background="gray", fg="black")
 
@@ -1200,7 +1215,7 @@ def main():
         load_specific_parameters()
 
         # Create right panel
-        attack_panel = create_panel(root, row=0, column=1, rowspan=2)
+        attack_panel = create_panel(root, row=0, column=1, rowspan=3)
         attack_panel.propagate(False)
 
         # valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
