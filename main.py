@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import *
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageChops
 import io
 from train_model import train_model
 from evaluate_model import evaluate_model, predict_sample
@@ -1266,7 +1266,66 @@ def main():
             display_input_image(input_panel)
 
         elif method == "camera":
-            input_image = preprocess_uploaded_image('/home/designteam10/Pictures/image.jpg', convolutional)
+            # Modify to have correct paths to reference
+            base_path = None
+            digit_path = None
+
+            def start_countdowns():
+                # for displaying countdown
+                def countdown(t, base, on_complete):
+                    def update():
+                        nonlocal t
+                        if t >= 0:
+                            #mins, secs = divmod(t, 60)
+                            #secs = 
+                            #timer_label.config(text=f"{mins:02d}:{secs:02d}")
+                            timer_label.config(text=f"{t}")
+                            t -= 1
+                            countdown_window.after(1000, update)
+                        else:
+                            if base:
+                                timer_label.config(text="Taking Base Picture Now!")
+                                countdown_window.after(1000, on_complete)
+                                # PUT CODE HERE: take picture and save to base path
+                                # ....................
+                                print("Base picture taken!")
+                            else:
+                                timer_label.config(text="Taking Digit Picture Now!")
+                                countdown_window.after(1000, on_complete)
+                                # PUT CODE HERE: take picture and save to digit path
+                                # ....................
+                                print("Digit picture taken!")
+                    update()
+                
+                # start first countdown
+                countdown_window.after(1000, lambda: countdown(3, True, start_second_countdown))
+
+                # to be triggered after completion of first
+                def start_second_countdown():
+                    timer_label.config(text="Countdown timer for number picture!")
+                    countdown(10, False, countdown_window.destroy)
+            
+            # Create window
+            countdown_window = tk.Toplevel()
+            countdown_window.title("Countdown Timer")
+            timer_label = tk.Label(countdown_window, text="Countdown timer for base picture!", font=("Helvetica", 25))
+            timer_label.pack(pady=20, expand=True)#, anchor="center")
+            countdown_window.geometry("450x100")
+
+            # start countdowns
+            start_countdowns()
+
+            # run window
+            countdown_window.mainloop()
+
+            # do subtraction and save
+            base_img = Image.open(base_path).convert('L')
+            number_img = Image.open(digit_path).convert('L')
+            subtracted_img = ImageChops.subtract(number_img, base_img)
+            subtracted_img.save('subtracted_img.png')
+
+            # Process image
+            input_image = preprocess_uploaded_image('subtracted_img.png', convolutional)
             display_input_image(input_panel)
         
 
