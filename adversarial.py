@@ -142,6 +142,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
 
     # setting title
     #plt.title("Live Adversarial Attack", fontsize=20)
+    fig.suptitle("Live Adversarial Attack Visualization", fontsize=20)
     axes[0].set_title(f"Adversarial Image\nEpsilon: {round(epsilon,2)}, Pixels Modified: {pix_num}")
     axes[0].axis('off')
     im = axes[0].imshow(input_image.reshape(28, 28), cmap='gray')

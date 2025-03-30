@@ -236,13 +236,13 @@ def plot_confidence_text(min_epsilon_predictions, min_topn_predictions, min_dist
 def plot_success_rate(success_rates, root):
     # Convert success rates to a format that can be plotted
     epsilon_values = np.arange(0.1, 1.1, 0.1)
-    top_n_values = range(5, 201, 5)
+    top_n_values = range(0, 201, 5)
 
     success_matrix = np.zeros((len(top_n_values), len(epsilon_values)))
 
     for epsilon, top_n, distortion, success, adv_probs, adv_image in success_rates:
-        epsilon_idx = int((epsilon - 0.1) * 10)
-        top_n_idx = (top_n - 5) // 5
+        epsilon_idx = int((epsilon-0.1) * 10)
+        top_n_idx = (top_n) // 5
         success_matrix[top_n_idx, epsilon_idx] += success
 
     # Normalize the success rate matrix
@@ -252,7 +252,10 @@ def plot_success_rate(success_rates, root):
         success_matrix = np.zeros_like(success_matrix)
 
     # Create a figure
-    fig, ax = plt.subplots(figsize=(10, 6))
+    #plt.clf()  
+    #fig, ax = plt.subplots(figsize=(10, 6))
+    fig = Figure(figsize=(10,6))
+    ax = fig.subplots(1,1)
     cax = ax.imshow(success_matrix, cmap='YlGnBu', aspect='auto', origin='lower')
 
     fig.colorbar(cax, label="Success Rate")
@@ -325,6 +328,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     min_distortion_adv_image_np = min_distortion_adv_image.numpy() if tf.is_tensor(min_distortion_adv_image) else min_distortion_adv_image
 
     # Calculate perturbations
+    #if np.allclose(min_epsilon_adv_image_np, original_image_np, atol=1e-6)
     perturbation_min_epsilon = np.abs(min_epsilon_adv_image_np - original_image_np)
     perturbation_min_top_n = np.abs(min_top_n_adv_image_np - original_image_np)
     perturbation_min_distortion = np.abs(min_distortion_adv_image_np - original_image_np)
@@ -358,7 +362,10 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
 
     # Create a new figure with a specific figure number
-    fig = plt.figure(num=2, figsize=(10, 7))
+    # plt.clf()  
+    # fig = plt.figure(num=2, figsize=(10, 7))
+    fig = Figure(figsize=(10,7))#, num=2)
+    #axes = fig.subplots(1,2)
     # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
 
     # Case 1: Minimum epsilon successful case
@@ -369,16 +376,21 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[0, 0].axis('off')
 
     axes[0, 1].imshow(min_epsilon_adv_image_np.reshape(28, 28), cmap='gray')
-    axes[0, 1].set_title(f"Adversarial Image\nMin Epsilon: {round(min_epsilon, 1)}, Top N: {min_epsilon_top_n}")
+    #axes[0, 1].set_title(f"Adversarial Image\nMin Epsilon: {round(min_epsilon, 1)}, Top N: {min_epsilon_top_n}")
+    axes[0, 1].set_title(f"Min Epsilon Case ({round(min_epsilon, 1)})\nAdversarial Image")
     axes[0, 1].axis('off')
 
     axes[0, 2].imshow(perturbation_min_epsilon.reshape(28, 28), cmap='hot')
-    axes[0, 2].set_title("Perturbation (Min Epsilon)")
+    #axes[0, 2].set_title("Perturbation (Min Epsilon)")
+    axes[0, 2].set_title("Perturbation")
     axes[0, 2].axis('off')
 
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     axes[0, 3].set_title("Confidence Scores")
-    axes[0, 3].bar(digits, min_epsilon_confidence)
+    bar_colors = ['blue'] * 10
+    bar_colors[original_label[0]] = 'green'
+    bar_colors[target_label[0]] = 'red'
+    axes[0, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
     # Case 2: Minimum pixel count successful case
     axes[1, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
@@ -386,15 +398,20 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[1, 0].axis('off')
 
     axes[1, 1].imshow(min_top_n_adv_image_np.reshape(28, 28), cmap='gray')
-    axes[1, 1].set_title(f"Adversarial Image\nMin Top N: {min_top_n}, Epsilon: {round(min_top_n_epsilon, 1)}")
+    #axes[1, 1].set_title(f"Adversarial Image\nMin Top N: {min_top_n}, Epsilon: {round(min_top_n_epsilon, 1)}")
+    axes[1, 1].set_title(f"Min Pixels Case ({min_top_n})\nAdversarial Image")
     axes[1, 1].axis('off')
 
     axes[1, 2].imshow(perturbation_min_top_n.reshape(28, 28), cmap='hot')
-    axes[1, 2].set_title("Perturbation (Min Top N)")
+    # axes[1, 2].set_title("Perturbation (Min Top N)")
+    axes[1, 2].set_title("Perturbation")
     axes[1, 2].axis('off')
 
     axes[1, 3].set_title("Confidence Scores")
-    axes[1, 3].bar(digits, min_top_n_confidence)
+    bar_colors = ['blue'] * 10
+    bar_colors[original_label[0]] = 'green'
+    bar_colors[target_label[0]] = 'red'
+    axes[1, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
     # Case 3: Minimum distortion successful case
     axes[2, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
@@ -402,17 +419,23 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 0].axis('off')
 
     axes[2, 1].imshow(min_distortion_adv_image_np.reshape(28, 28), cmap='gray')
-    axes[2, 1].set_title(f"Adversarial Image\nMin Distortion: {round(float(min_distortion.numpy()*100), 2)}%, Top N: {round(min_distortion_top_n,1)}, Epsilon: {round(min_distortion_epsilon, 1)}")
+    #axes[2, 1].set_title(f"Adversarial Image\nMin Distortion: {round(float(min_distortion.numpy()*100), 2)}%, Top N: {round(min_distortion_top_n,1)}, Epsilon: {round(min_distortion_epsilon, 1)}")
+    axes[2, 1].set_title(f"Min Distortion Case ({round(float(min_distortion.numpy()*100), 2)}%)\nAdversarial Image")
     axes[2, 1].axis('off')
 
     axes[2, 2].imshow(perturbation_min_distortion.reshape(28, 28), cmap='hot')
-    axes[2, 2].set_title("Perturbation (Min Top N)")
+    # axes[2, 2].set_title("Perturbation (Min Top N)")
+    axes[2, 2].set_title("Perturbation")
     axes[2, 2].axis('off')
 
     axes[2, 3].set_title("Confidence Scores")
-    axes[2, 3].bar(digits, min_distortion_confidence)
+    bar_colors = ['blue'] * 10
+    bar_colors[original_label[0]] = 'green'
+    bar_colors[target_label[0]] = 'red'
+    axes[2, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
-    plt.tight_layout()
+    fig.tight_layout()
+    fig.subplots_adjust(hspace=0.4)
 
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
@@ -471,16 +494,6 @@ def main():
 
     def iteration_test(model, processed_image, target_label, root):
 
-        tabControl = ttk.Notebook(root)
-
-        tab1 = ttk.Frame(tabControl)
-        tab2 = ttk.Frame(tabControl)
-        tab3 = ttk.Frame(tabControl)
-
-        tabControl.add(tab1, text='Adversarial Image')
-        tabControl.add(tab2, text='Success Rates')
-        tabControl.add(tab3, text='All Cases')
-
         # Get prediction for original image
         original_pred, original_probs = predict_sample(model, processed_image)
         print("\nOriginal Prediction:")
@@ -495,8 +508,11 @@ def main():
         for epsilon in np.arange(0.1, 1.1, 0.1):
             #print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
             print(f"Testing epsilon={epsilon:.1f}")
-            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(tab1, model, processed_image, original_pred,
+            #adversarial_image, num_pixels_changed = create_adversarial_example_saliency(tab1, model, processed_image, original_pred,
+            #                                                        target_label, epsilon, 150, convolutional)
+            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(root, model, processed_image, original_pred,
                                                                     target_label, epsilon, 150, convolutional)
+            #print(num_pixels_changed)
             # Get prediction for adversarial image
             original_pred, original_probs = predict_sample(model, processed_image)
             adv_pred, adv_probs = predict_sample(model, adversarial_image)
@@ -509,13 +525,38 @@ def main():
                 print(distortion)
             else:
                 print("Adversarial example can NOT be made with epsilon", epsilon)
-            for n in range(5, 201, 5):
+            for n in range(0, 201, 5):
                 if n < num_pixels_changed:
                     success_rates.append((epsilon, n, distortion, 0, adv_probs, adversarial_image))
                 else:
                     success_rates.append((epsilon, n, distortion, success, adv_probs, adversarial_image))
 
+        clear_screen(root)
+        # menu button
+        # menu_btn_frame = Frame(root, pady=5, bd=2, background="gray")
+        # menu_btn = Button(menu_btn_frame, text="Reset!", command=lambda: load_menu(), bg="white", fg="black")
+        # menu_btn.pack(expand=True, fill="y")
+        # menu_btn_frame.pack()
+        reset_btn = Button(root, text="Reset!", command=lambda: load_menu(),
+                  bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
+        reset_btn.pack(pady=5)#, expand=True, fill="y")
+
+
+        tabControl = ttk.Notebook(root)
+
+        #tab1 = ttk.Frame(tabControl)
+        tab2 = ttk.Frame(tabControl)
+        tab3 = ttk.Frame(tabControl)
+        # tab2 = Frame(tabControl, bg="gray", bd=2, relief="sunken")
+        # tab3 = Frame(tabControl, bg="gray", bd=2, relief="sunken")
+
+        # tabControl.add(tab1, text='Adversarial Image')
+        tabControl.add(tab2, text='Success Rates')
+        tabControl.add(tab3, text='Best Cases')
+
         tabControl.pack(expand=True, fill='both')
+
+        #plot_images(root, processed_image, original_pred, adversarial_image, target_label, difference, adv_probs)
 
         # Plot success rate heatmap first, with block=False
         plot_success_rate(success_rates, tab2)
@@ -544,10 +585,14 @@ def main():
 
         clear_screen(root)
         # menu button
-        menu_btn = ttk.Button(root, text="Reset!", command=lambda: load_menu())
-        menu_btn.pack()
+        # menu_btn = ttk.Button(root, text="Reset!", command=lambda: load_menu())
+        # menu_btn.pack()
+        reset_btn = Button(root, text="Reset!", command=lambda: load_menu(),
+                  bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
+        reset_btn.pack(pady=5)#, expand=True, fill="y")
 
-        fig = Figure(figsize=(1,1))
+        plt.clf()  
+        fig = Figure(figsize=(10,7))
         #fig.patch.set_facecolor("none")
         axes = fig.subplots(2,2)
         canvas = FigureCanvasTkAgg(fig, master = root)
@@ -657,10 +702,11 @@ def main():
     # Load and preprocess MNIST dataset for training
     print("Loading MNIST dataset...")
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    
     print("Done!")
 
     # Normalize and reshape data
-    x_train, x_test = x_train / 255.0, x_test / 255.0
+    x_train, x_test = (x_train/255.0).astype(np.float32), (x_test/255.0).astype(np.float32)
 
     # Model and parameters
     model = None
@@ -1005,6 +1051,7 @@ def main():
         # button6 = ttk.Button(master = option_screen_frame, text="Exit program", command=root.destroy)
         # button6.pack()
 
+        #plt.close('all')
 
         target_class = tk.StringVar()
         target_class.set(valid_digits[1])
@@ -1014,12 +1061,22 @@ def main():
         def run_iterate_attack(target):
             nonlocal input_image
             nonlocal attack_panel
+            # clear_screen(attack_panel)
+            # attack_header_frame = Frame(attack_panel, pady=5, bd=2, background="gray")
+            # attack_header_label = Label(attack_header_frame, text="Live Adversarial Attack Visualization", bg ="gray", fg="black", font=("Arial", 25, "bold"))
+            # attack_header_label.pack()
+            # attack_header_frame.pack()
             pred, probs = predict_sample(model, input_image)
             iteration_test(model, input_image, target, attack_panel)
 
         def run_specific_attack(target, epsilon):
             nonlocal input_image
             nonlocal attack_panel
+            # clear_screen(attack_panel)
+            # attack_header_frame = Frame(attack_panel, pady=5, bd=2, background="gray")
+            # attack_header_label = Label(attack_header_frame, text="Live Adversarial Attack Visualization", bg ="gray", fg="black", font=("Arial", 25, "bold"))
+            # attack_header_label.pack()
+            # attack_header_frame.pack()
             pred, probs = predict_sample(model, input_image)
             specific_test(model, input_image, pred, target, epsilon, attack_panel)
 
@@ -1075,8 +1132,8 @@ def main():
         # Configure grid layout for the root window
         root.rowconfigure(0, weight=1, minsize=200)  # Make top-left panel smaller
         root.rowconfigure(1, weight=2)
-        root.columnconfigure(0, weight=2, minsize=200)  # Make top-left panel smaller
-        root.columnconfigure(1, weight=3)
+        root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
+        root.columnconfigure(1, weight=2)
         
         # Function to create a panel with an inner box
         def create_panel(parent, row, column, rowspan=1, columnspan=1):
