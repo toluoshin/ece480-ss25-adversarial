@@ -1216,6 +1216,16 @@ def main():
 
         # Create right panel
         attack_panel = create_panel(root, row=0, column=1, rowspan=3)
+        matrix_image = Image.open("Images/matrix.png")
+        matrix_image = matrix_image.resize((825,660))
+        photo = ImageTk.PhotoImage(matrix_image)
+        attack_caption_label = tk.Label(master = attack_panel, text="Adversarial Attack Performance Matrix", font=("Arial", 25, "bold")
+                                        , justify="center", background="gray", fg="black")
+        attack_matrix_label = tk.Label(master = attack_panel, image=photo
+                                        , justify="center", background="gray")
+        attack_matrix_label.image = photo
+        attack_caption_label.pack(pady=40)
+        attack_matrix_label.pack(expand=True, fill="y")
         attack_panel.propagate(False)
 
         # valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
