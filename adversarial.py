@@ -140,6 +140,12 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     canvas.draw()
     canvas.get_tk_widget().pack(expand=True, fill='both')
 
+    legend_frame = Frame(root, bd=2, background="white", relief="sunken")
+    legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
+    legend_label.pack(pady=2)
+    legend_frame.pack(fill="x")
+    #legend_frame.propagate(False)
+
     # setting title
     #plt.title("Live Adversarial Attack", fontsize=20)
     fig.suptitle("Live Adversarial Attack Visualization", fontsize=20)
@@ -147,13 +153,15 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     axes[0].axis('off')
     im = axes[0].imshow(input_image.reshape(28, 28), cmap='gray')
 
-    axes[1].set_title("Confidence Scores")
+    axes[1].set_title("Confidence Scores (%)")
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     _, adv_probs = predict_sample(model, input_image)
     bar_colors = ['blue'] * 10
     bar_colors[input_label] = 'green'
     bar_colors[target_label] = 'red'
+    adv_probs = [v * 100 for v in adv_probs]
     bars = axes[1].bar(digits, adv_probs, color=bar_colors)
+    # axes[1].legend(loc='upper right', fontsize='small', frameon=False)
     # axes[1].xlabel("Digits")
     # axes[1].ylabel("Probability")
 
@@ -251,7 +259,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         # Plot confidences
         _, new_probs = predict_sample(model, adversarial_image)
         for bar, new_prob in zip(bars, new_probs):
-            bar.set_height(new_prob)
+            bar.set_height(new_prob*100)
 
         fig.canvas.draw()
         fig.canvas.flush_events()

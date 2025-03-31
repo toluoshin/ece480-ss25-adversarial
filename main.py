@@ -364,7 +364,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     # Create a new figure with a specific figure number
     # plt.clf()  
     # fig = plt.figure(num=2, figsize=(10, 7))
-    fig = Figure(figsize=(10,7))#, num=2)
+    fig = Figure(figsize=(12,7.5))#, num=2)
     #axes = fig.subplots(1,2)
     # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
 
@@ -386,7 +386,7 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[0, 2].axis('off')
 
     digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    axes[0, 3].set_title("Confidence Scores")
+    axes[0, 3].set_title("Confidence Scores (%)")
     bar_colors = ['blue'] * 10
     bar_colors[original_label[0]] = 'green'
     bar_colors[target_label[0]] = 'red'
@@ -438,11 +438,20 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     axes[2, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
     fig.tight_layout()
-    fig.subplots_adjust(hspace=0.4)
+    fig.subplots_adjust(hspace=0.5)
+
+    legend_frame = Frame(root, bd=2, background="white", relief="sunken")
+    legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
+    legend_label.pack(pady=2)
+    legend_frame.pack(expand=True, side="bottom",fill="x")
 
     canvas = FigureCanvasTkAgg(fig, master=root)
     canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    canvas.get_tk_widget().pack(side="top", fill="x")
+
+    
+
+    
 
 
 
@@ -604,18 +613,22 @@ def main():
         success_text = "Attack success!"
         if (adv_pred != target_label):
             success_text = "Attack was not successful."
-        success_frame = Frame(root, bd=2, background="gray", relief="sunken")
-        success_label = Label(success_frame, text=success_text, bg="gray", fg="black", font=("Arial", 25, "bold"))
+        success_frame = Frame(root, bd=2, background="white", relief="sunken")
+        success_label = Label(success_frame, text=success_text, bg="white", fg="black", font=("Arial", 25, "bold"))
         success_label.pack(pady=2)
         success_frame.pack(expand=True, fill="both")
 
         plt.clf()  
-        fig = Figure(figsize=(10,7))
+        legend_frame = Frame(root, background="white", relief="sunken")
+        legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
+        legend_label.pack()
+        legend_frame.pack(expand=True, side="bottom",fill="both")
+        fig = Figure(figsize=(5,6.75))
         #fig.patch.set_facecolor("none")
         axes = fig.subplots(2,2)
         canvas = FigureCanvasTkAgg(fig, master = success_frame)
         canvas.draw()
-        canvas.get_tk_widget().pack(anchor="center", expand=True, fill="both")
+        canvas.get_tk_widget().pack(side="top", fill="x")
 
         #fig, axes = plt.subplots(1, 4, figsize=(15, 5))
 
@@ -1157,6 +1170,7 @@ def main():
         root.rowconfigure(0, weight=2)  # Make top-left panel smalle
         root.rowconfigure(1, weight=5, minsize=200)  # Make top-left panel smaller
         root.rowconfigure(2, weight=16)
+        #root.rowconfigure(3, weight=2)
         root.columnconfigure(0, weight=1, minsize=150)  # Make top-left panel smaller
         root.columnconfigure(1, weight=2)
         
@@ -1260,6 +1274,13 @@ def main():
         attack_matrix_label.pack(expand=True, fill="y")
         attack_panel.propagate(False)
 
+        #legend_panel = create_panel(root, row=3, column=1)
+        # #legend_frame = Frame(root, bd=2, background="gray", relief="sunken")
+        # legend_label = Label(legend_panel, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="gray", fg="black", font=("Arial", 25, "bold"))
+        # legend_label.pack(pady=2)
+        # legend_panel.pack(fill="x")
+        # legend_panel.propagate(False)
+
         # valid_digits = ['', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
         # target_class = tk.StringVar()
@@ -1284,7 +1305,7 @@ def main():
         if method == "mnist":
             source_choice_window = tk.Toplevel(root)
             source_choice_window.title("Choose Source Class")            
-            source_choice_window.geometry("300x200")
+            source_choice_window.geometry("300x150")
 
             source_choice = tk.StringVar()
             source_choice.set(valid_digits[0])
@@ -1315,7 +1336,7 @@ def main():
             #     print("Val:", source_choice.get())
 
             # done_button = ttk.Button(source_choice_window, text="Select", command=on_select)
-            done_button.pack(pady=30)
+            done_button.pack(pady=10)
 
             source_choice_frame.pack(expand=True, fill="both")
             source_choice_window.mainloop()
