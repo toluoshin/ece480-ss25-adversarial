@@ -1235,15 +1235,15 @@ def main():
 
         # Create bottom-left panel
         parameter_panel = create_panel(root, row=2, column=0)
-        parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=("Arial", 20, "bold")
-                                        , justify="center", background="gray", fg="black")
+        parameter_instruction_label = tk.Label(master = parameter_panel, text="Set Attack Parameters:", font=("Arial", 20, "bold"),
+                                               justify="center", background="gray", fg="black")
 
         parameter_instruction_label.pack(pady=7)
         iterate_option_frame = Frame(parameter_panel, pady=5, relief="sunken", bd=2, background="gray")
         iterate_option_frame.pack(fill="x", side="top")
 
-        instruction_label = tk.Label(master = iterate_option_frame, text="Choose type of adversarial test:", font=("Arial", 25, "bold")
-                                        , justify="center", background="gray", fg="black")#.grid(column=0, row=0)
+        instruction_label = tk.Label(master = iterate_option_frame, text="Choose type of adversarial test:", font=("Arial", 25, "bold"),
+                                     justify="center", background="gray", fg="black")#.grid(column=0, row=0)
         instruction_label.pack(pady=5)
         iterate_var = tk.BooleanVar(value = False)
         radio_specific = Radiobutton(iterate_option_frame, text="Test specific epsilon", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
@@ -1448,34 +1448,60 @@ def main():
         #     train_model = train_var.get()
         
         clear_screen(root)
-        welcome_screen_frame = ttk.Frame(root, padding=10)
-        #welcome_screen_frame = Frame(root, bd=2, background="gray")
-        welcome_screen_frame.pack(expand=True, fill="x")
-        welcome_label = tk.Label(master = welcome_screen_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 14), justify="center")
+
+        welcome_screen_frame = Frame(root, bg="gray", bd=2, relief='sunken')
+        welcome_screen_frame.pack(expand=True, fill="both")
+
+        inner_frame = Frame(welcome_screen_frame, bg="gray", bd=2, relief='ridge')
+        inner_frame.pack(padx=15, pady=15, expand=True, fill="both")
+
+        space = (tk.Label(inner_frame, text="\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n", bg="gray", fg="black"))
+        space.pack()
+
+        welcome_label = tk.Label(inner_frame, text="Welcome to the Adversarial Attack Program!", font=("Arial", 36, "bold", "underline"),
+                                 background="gray", fg="black")
         welcome_label.pack(pady=5)
-        instruction_label_1 = tk.Label(master = welcome_screen_frame, text="Select from the options below:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+
+        instruction_label_1 = tk.Label(inner_frame, text="Select from the options below:", font=("Arial", 25, "bold"),
+                                       background="gray", fg="black")
         instruction_label_1.pack()
-        tk.Label(master = welcome_screen_frame, text=" ", font=("Arial", 14), justify="center").pack()
-        instruction_label_2 = tk.Label(master = welcome_screen_frame, text="Choose type of Deep Neural Network (DNN):", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+
+        space = (tk.Label(inner_frame, text=" ", bg="gray", fg="black"))
+        space.pack()
+
+        instruction_label_2 = tk.Label(inner_frame, text="Choose type of Deep Neural Network (DNN):", font=("Arial", 18),
+                                       background="gray", fg="black")
         instruction_label_2.pack(pady=5)
-        convo_var = tk.BooleanVar(value = False)
-        radio_mlp = ttk.Radiobutton(welcome_screen_frame, text="Multi-Layer Perceptron", variable=convo_var, value=False)#, command=on_radio_change)
+
+        convo_var = tk.BooleanVar(value=False)
+        radio_mlp = tk.Radiobutton(inner_frame, text="Multi-Layer Perceptron", variable=convo_var, value=False,
+                                   background="gray", fg="black")
         radio_mlp.pack()
-        radio_convo = ttk.Radiobutton(welcome_screen_frame, text="Convolutional Neural Network", variable=convo_var, value=True)#, command=on_radio_change)
+
+        radio_convo = tk.Radiobutton(inner_frame, text="Convolutional Neural Network", variable=convo_var, value=True,
+                                     background="gray", fg="black")
         radio_convo.pack()
-        tk.Label(master = welcome_screen_frame, text=" ", font=("Arial", 14), justify="center").pack()
-        instruction_label_3 = tk.Label(master = welcome_screen_frame, text="Choose whether to load trained model or to train one now:", font=("Arial", 14), justify="center")#.grid(column=0, row=0)
+
+        space = (tk.Label(inner_frame, text=" ", bg="gray", fg="black"))
+        space.pack()
+
+        instruction_label_3 = tk.Label(inner_frame, text="Choose whether to load trained model or to train one now:",
+                                       font=("Arial", 18), background="gray", fg="black")
         instruction_label_3.pack(pady=5)
-        train_var = tk.BooleanVar(value = False)
-        radio_load = ttk.Radiobutton(welcome_screen_frame, text="Load trained model", variable=train_var, value=False)#, command=on_radio_change)
+
+        train_var = tk.BooleanVar(value=False)
+        radio_load = tk.Radiobutton(inner_frame, text="Load trained model", variable=train_var, value=False,
+                                    background="gray", fg="black")
         radio_load.pack()
-        radio_train = ttk.Radiobutton(welcome_screen_frame, text="Train a model now", variable=train_var, value=True)#, command=on_radio_change)
+
+        radio_train = tk.Radiobutton(inner_frame, text="Train a model now", variable=train_var, value=True,
+                                    background="gray", fg="black")
         radio_train.pack()
-        done_button = ttk.Button(master = welcome_screen_frame, text="Proceed!", command=lambda: first_load_menu(convo_var.get(), train_var.get()))
+
+        done_button = tk.Button(inner_frame, text="Proceed!", font=("Arial", 20, "bold"),
+                                command=lambda: first_load_menu(convo_var.get(), train_var.get()))
         done_button.pack(pady=30)
 
-
-        
 
     load_welcome_screen()
     root.mainloop()
