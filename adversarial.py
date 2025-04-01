@@ -138,12 +138,12 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     # Creating the Tkinter canvas containing the Matplotlib figure
     canvas = FigureCanvasTkAgg(fig, master = root)
     canvas.draw()
-    canvas.get_tk_widget().pack(expand=True, fill='both')
+    canvas.get_tk_widget().pack(expand=True, fill='both', side="top")
 
-    legend_frame = Frame(root, bd=2, background="white", relief="sunken")
+    legend_frame = Frame(root, bd=2, background="white")#, relief="sunken")
     legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
     legend_label.pack(pady=2)
-    legend_frame.pack(fill="x")
+    legend_frame.pack(fill="both", side="bottom")
     #legend_frame.propagate(False)
 
     # setting title

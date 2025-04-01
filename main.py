@@ -302,152 +302,173 @@ def plot_min_success_cases(success_rates, model, original_image, original_label,
     )
 
     # Check if we have successful cases
+    display_frame = Frame(root, background="white", relief="sunken")
+
     if min_epsilon_case is None or min_top_n_case is None:
         print("No successful adversarial examples found.")
-        return
+        #display_frame = Frame(root, background="white", relief="sunken")
+        # failure_label = Label(display_frame, text="No successful adversarial examples found.", bg="white", fg="black", font=("Arial", 25, "bold"))
+        # failure_label.pack(pady=2, fill="both", expand=True)
+        # failure_label.pack()
+        fig = Figure(figsize=(9,6.5))
+        fig.suptitle("No successful adversarial examples found.", fontsize=20, y=0.5)
+        canvas = FigureCanvasTkAgg(fig, master=display_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side="top", fill="both")
+    else:
+        #display_frame.pack(fill="both", expand=True)
 
-    #print("min_epsilon_case: ", min_epsilon_case)
-    #print("min_top_n_case: ", min_top_n_case)
+        #print("min_epsilon_case: ", min_epsilon_case)
+        #print("min_top_n_case: ", min_top_n_case)
 
-    # Extract epsilon and top_n values for each case
-    min_epsilon, min_epsilon_top_n, min_epsilon_distortion, min_epsilon_success, min_epsilon_confidence, min_epsilon_adv_image = min_epsilon_case
-    min_top_n_epsilon, min_top_n, min_top_n_distortion, min_top_n_success, min_top_n_confidence, min_top_n_adv_image = min_top_n_case
-    min_distortion_epsilon, min_distortion_top_n, min_distortion, min_distortion_success, min_distortion_confidence, min_distortion_adv_image = min_distortion_case
+        # Extract epsilon and top_n values for each case
+        min_epsilon, min_epsilon_top_n, min_epsilon_distortion, min_epsilon_success, min_epsilon_confidence, min_epsilon_adv_image = min_epsilon_case
+        min_top_n_epsilon, min_top_n, min_top_n_distortion, min_top_n_success, min_top_n_confidence, min_top_n_adv_image = min_top_n_case
+        min_distortion_epsilon, min_distortion_top_n, min_distortion, min_distortion_success, min_distortion_confidence, min_distortion_adv_image = min_distortion_case
 
-    # # Generate adversarial images for the two cases
-    # min_epsilon_adv_image, _ = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_epsilon,
-    #                                                             min_epsilon_top_n)
-    # min_top_n_adv_image, _ = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_top_n_epsilon,
-    #                                                           min_top_n)
+        # # Generate adversarial images for the two cases
+        # min_epsilon_adv_image, _ = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_epsilon,
+        #                                                             min_epsilon_top_n)
+        # min_top_n_adv_image, _ = create_adversarial_example_saliency(model, original_image, original_label, target_label, min_top_n_epsilon,
+        #                                                           min_top_n)
 
-    # Convert tensors to numpy arrays for plotting
-    original_image_np = original_image.numpy() if tf.is_tensor(original_image) else original_image
-    min_epsilon_adv_image_np = min_epsilon_adv_image.numpy() if tf.is_tensor(
-        min_epsilon_adv_image) else min_epsilon_adv_image
-    min_top_n_adv_image_np = min_top_n_adv_image.numpy() if tf.is_tensor(min_top_n_adv_image) else min_top_n_adv_image
-    min_distortion_adv_image_np = min_distortion_adv_image.numpy() if tf.is_tensor(min_distortion_adv_image) else min_distortion_adv_image
+        # Convert tensors to numpy arrays for plotting
+        original_image_np = original_image.numpy() if tf.is_tensor(original_image) else original_image
+        min_epsilon_adv_image_np = min_epsilon_adv_image.numpy() if tf.is_tensor(
+            min_epsilon_adv_image) else min_epsilon_adv_image
+        min_top_n_adv_image_np = min_top_n_adv_image.numpy() if tf.is_tensor(min_top_n_adv_image) else min_top_n_adv_image
+        min_distortion_adv_image_np = min_distortion_adv_image.numpy() if tf.is_tensor(min_distortion_adv_image) else min_distortion_adv_image
 
-    # Calculate perturbations
-    #if np.allclose(min_epsilon_adv_image_np, original_image_np, atol=1e-6)
-    perturbation_min_epsilon = np.abs(min_epsilon_adv_image_np - original_image_np)
-    perturbation_min_top_n = np.abs(min_top_n_adv_image_np - original_image_np)
-    perturbation_min_distortion = np.abs(min_distortion_adv_image_np - original_image_np)
+        # Calculate perturbations
+        #if np.allclose(min_epsilon_adv_image_np, original_image_np, atol=1e-6)
+        perturbation_min_epsilon = np.abs(min_epsilon_adv_image_np - original_image_np)
+        perturbation_min_top_n = np.abs(min_top_n_adv_image_np - original_image_np)
+        perturbation_min_distortion = np.abs(min_distortion_adv_image_np - original_image_np)
 
-    # Calculate confidence for each adversarial image (top 3 confidences)
-    # min_epsilon_confidence = model.predict(min_epsilon_adv_image_np.reshape(1, 784))[0]
-    # min_top_n_confidence = model.predict(min_top_n_adv_image_np.reshape(1, 784))[0]
-    # min_epsilon_confidence = predict_sample(model, min_epsilon_adv_image_np)[1]
-    # min_top_n_confidence = predict_sample(model, min_top_n_adv_image_np)[1]
-    # min_epsilon_confidence = success_rates
-    # min_top_n_confidence = predict_sample(model, min_top_n_adv_image_np)[1]
+        # Calculate confidence for each adversarial image (top 3 confidences)
+        # min_epsilon_confidence = model.predict(min_epsilon_adv_image_np.reshape(1, 784))[0]
+        # min_top_n_confidence = model.predict(min_top_n_adv_image_np.reshape(1, 784))[0]
+        # min_epsilon_confidence = predict_sample(model, min_epsilon_adv_image_np)[1]
+        # min_top_n_confidence = predict_sample(model, min_top_n_adv_image_np)[1]
+        # min_epsilon_confidence = success_rates
+        # min_top_n_confidence = predict_sample(model, min_top_n_adv_image_np)[1]
 
-    # print("min_epsilon_confidence: ", min_epsilon_confidence)
-    # print("min_top_n_confidence: ", min_top_n_confidence)
+        # print("min_epsilon_confidence: ", min_epsilon_confidence)
+        # print("min_top_n_confidence: ", min_top_n_confidence)
 
-    # Get the top 3 confidence values and their corresponding classes
-    min_epsilon_top_3 = np.argsort(min_epsilon_confidence)[::-1][:3]
-    min_top_n_top_3 = np.argsort(min_top_n_confidence)[::-1][:3]
-    min_distortion_top_3 = np.argsort(min_distortion_confidence)[::-1][:3]
+        # Get the top 3 confidence values and their corresponding classes
+        min_epsilon_top_3 = np.argsort(min_epsilon_confidence)[::-1][:3]
+        min_top_n_top_3 = np.argsort(min_top_n_confidence)[::-1][:3]
+        min_distortion_top_3 = np.argsort(min_distortion_confidence)[::-1][:3]
 
-    min_epsilon_confidence_top_3 = min_epsilon_confidence[min_epsilon_top_3]
-    min_top_n_confidence_top_3 = min_top_n_confidence[min_top_n_top_3]
-    min_distortion_confidence_top_3 = min_distortion_confidence[min_distortion_top_3]
+        min_epsilon_confidence_top_3 = min_epsilon_confidence[min_epsilon_top_3]
+        min_top_n_confidence_top_3 = min_top_n_confidence[min_top_n_top_3]
+        min_distortion_confidence_top_3 = min_distortion_confidence[min_distortion_top_3]
 
-    # Instead of the existing print statements for confidence rates, add:
-    min_epsilon_top_3_data = list(zip(min_epsilon_top_3, min_epsilon_confidence_top_3))
-    min_top_n_top_3_data = list(zip(min_top_n_top_3, min_top_n_confidence_top_3))
-    min_distortion_top_3_data = list(zip(min_distortion_top_3, min_distortion_confidence_top_3))
+        # Instead of the existing print statements for confidence rates, add:
+        min_epsilon_top_3_data = list(zip(min_epsilon_top_3, min_epsilon_confidence_top_3))
+        min_top_n_top_3_data = list(zip(min_top_n_top_3, min_top_n_confidence_top_3))
+        min_distortion_top_3_data = list(zip(min_distortion_top_3, min_distortion_confidence_top_3))
 
-    # Display confidence text in a separate window
-    #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
+        # Display confidence text in a separate window
+        #plot_confidence_text(min_epsilon_top_3_data, min_top_n_top_3_data, min_distortion_top_3_data)
 
-    # Create a new figure with a specific figure number
-    # plt.clf()  
-    # fig = plt.figure(num=2, figsize=(10, 7))
-    fig = Figure(figsize=(12,7.5))#, num=2)
-    #axes = fig.subplots(1,2)
-    # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
+        # Create a new figure with a specific figure number
+        # plt.clf()  
+        # fig = plt.figure(num=2, figsize=(10, 7))
+        fig = Figure(figsize=(9,6.5))#, num=2)
+        #axes = fig.subplots(1,2)
+        # fig.suptitle("Minimum Successful Adversarial Examples", y=0.95)
 
-    # Case 1: Minimum epsilon successful case
-    axes = fig.subplots(3, 4)
+        # Case 1: Minimum epsilon successful case
+        axes = fig.subplots(3, 4)
 
-    axes[0, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
-    axes[0, 0].set_title("Original Image")
-    axes[0, 0].axis('off')
+        axes[0, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
+        axes[0, 0].set_title("Original Image")
+        axes[0, 0].axis('off')
 
-    axes[0, 1].imshow(min_epsilon_adv_image_np.reshape(28, 28), cmap='gray')
-    #axes[0, 1].set_title(f"Adversarial Image\nMin Epsilon: {round(min_epsilon, 1)}, Top N: {min_epsilon_top_n}")
-    axes[0, 1].set_title(f"Min Epsilon Case ({round(min_epsilon, 1)})\nAdversarial Image")
-    axes[0, 1].axis('off')
+        axes[0, 1].imshow(min_epsilon_adv_image_np.reshape(28, 28), cmap='gray')
+        #axes[0, 1].set_title(f"Adversarial Image\nMin Epsilon: {round(min_epsilon, 1)}, Top N: {min_epsilon_top_n}")
+        axes[0, 1].set_title(f"Min Epsilon Case ({round(min_epsilon, 1)})\nAdversarial Image")
+        axes[0, 1].axis('off')
 
-    axes[0, 2].imshow(perturbation_min_epsilon.reshape(28, 28), cmap='hot')
-    #axes[0, 2].set_title("Perturbation (Min Epsilon)")
-    axes[0, 2].set_title("Perturbation")
-    axes[0, 2].axis('off')
+        axes[0, 2].imshow(perturbation_min_epsilon.reshape(28, 28), cmap='hot')
+        #axes[0, 2].set_title("Perturbation (Min Epsilon)")
+        axes[0, 2].set_title("Perturbation")
+        axes[0, 2].axis('off')
 
-    digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-    axes[0, 3].set_title("Confidence Scores (%)")
-    bar_colors = ['blue'] * 10
-    bar_colors[original_label[0]] = 'green'
-    bar_colors[target_label[0]] = 'red'
-    min_epsilon_confidence = [v * 100 for v in min_epsilon_confidence]
-    axes[0, 3].bar(digits, min_epsilon_confidence, color=bar_colors)
+        digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        axes[0, 3].set_title("Confidence Scores (%)")
+        bar_colors = ['blue'] * 10
+        bar_colors[original_label[0]] = 'green'
+        bar_colors[target_label[0]] = 'red'
+        min_epsilon_confidence = [v * 100 for v in min_epsilon_confidence]
+        axes[0, 3].bar(digits, min_epsilon_confidence, color=bar_colors)
 
-    # Case 2: Minimum pixel count successful case
-    axes[1, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
-    axes[1, 0].set_title("Original Image")
-    axes[1, 0].axis('off')
+        # Case 2: Minimum pixel count successful case
+        axes[1, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
+        axes[1, 0].set_title("Original Image")
+        axes[1, 0].axis('off')
 
-    axes[1, 1].imshow(min_top_n_adv_image_np.reshape(28, 28), cmap='gray')
-    #axes[1, 1].set_title(f"Adversarial Image\nMin Top N: {min_top_n}, Epsilon: {round(min_top_n_epsilon, 1)}")
-    axes[1, 1].set_title(f"Min Pixels Case ({min_top_n})\nAdversarial Image")
-    axes[1, 1].axis('off')
+        axes[1, 1].imshow(min_top_n_adv_image_np.reshape(28, 28), cmap='gray')
+        #axes[1, 1].set_title(f"Adversarial Image\nMin Top N: {min_top_n}, Epsilon: {round(min_top_n_epsilon, 1)}")
+        axes[1, 1].set_title(f"Min Pixels Case ({min_top_n})\nAdversarial Image")
+        axes[1, 1].axis('off')
 
-    axes[1, 2].imshow(perturbation_min_top_n.reshape(28, 28), cmap='hot')
-    # axes[1, 2].set_title("Perturbation (Min Top N)")
-    axes[1, 2].set_title("Perturbation")
-    axes[1, 2].axis('off')
+        axes[1, 2].imshow(perturbation_min_top_n.reshape(28, 28), cmap='hot')
+        # axes[1, 2].set_title("Perturbation (Min Top N)")
+        axes[1, 2].set_title("Perturbation")
+        axes[1, 2].axis('off')
 
-    axes[1, 3].set_title("Confidence Scores (%)")
-    bar_colors = ['blue'] * 10
-    bar_colors[original_label[0]] = 'green'
-    bar_colors[target_label[0]] = 'red'
-    min_top_n_confidence = [v * 100 for v in min_top_n_confidence]
-    axes[1, 3].bar(digits, min_top_n_confidence, color=bar_colors)
+        axes[1, 3].set_title("Confidence Scores (%)")
+        bar_colors = ['blue'] * 10
+        bar_colors[original_label[0]] = 'green'
+        bar_colors[target_label[0]] = 'red'
+        min_top_n_confidence = [v * 100 for v in min_top_n_confidence]
+        axes[1, 3].bar(digits, min_top_n_confidence, color=bar_colors)
 
-    # Case 3: Minimum distortion successful case
-    axes[2, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
-    axes[2, 0].set_title("Original Image")
-    axes[2, 0].axis('off')
+        # Case 3: Minimum distortion successful case
+        axes[2, 0].imshow(original_image_np.reshape(28, 28), cmap='gray')
+        axes[2, 0].set_title("Original Image")
+        axes[2, 0].axis('off')
 
-    axes[2, 1].imshow(min_distortion_adv_image_np.reshape(28, 28), cmap='gray')
-    #axes[2, 1].set_title(f"Adversarial Image\nMin Distortion: {round(float(min_distortion.numpy()*100), 2)}%, Top N: {round(min_distortion_top_n,1)}, Epsilon: {round(min_distortion_epsilon, 1)}")
-    axes[2, 1].set_title(f"Min Distortion Case ({round(float(min_distortion.numpy()*100), 2)}%)\nAdversarial Image")
-    axes[2, 1].axis('off')
+        axes[2, 1].imshow(min_distortion_adv_image_np.reshape(28, 28), cmap='gray')
+        #axes[2, 1].set_title(f"Adversarial Image\nMin Distortion: {round(float(min_distortion.numpy()*100), 2)}%, Top N: {round(min_distortion_top_n,1)}, Epsilon: {round(min_distortion_epsilon, 1)}")
+        axes[2, 1].set_title(f"Min Distortion Case ({round(float(min_distortion.numpy()*100), 2)}%)\nAdversarial Image")
+        axes[2, 1].axis('off')
 
-    axes[2, 2].imshow(perturbation_min_distortion.reshape(28, 28), cmap='hot')
-    # axes[2, 2].set_title("Perturbation (Min Top N)")
-    axes[2, 2].set_title("Perturbation")
-    axes[2, 2].axis('off')
+        axes[2, 2].imshow(perturbation_min_distortion.reshape(28, 28), cmap='hot')
+        # axes[2, 2].set_title("Perturbation (Min Top N)")
+        axes[2, 2].set_title("Perturbation")
+        axes[2, 2].axis('off')
 
-    axes[2, 3].set_title("Confidence Scores (%)")
-    bar_colors = ['blue'] * 10
-    bar_colors[original_label[0]] = 'green'
-    bar_colors[target_label[0]] = 'red'
-    min_distortion_confidence = [v * 100 for v in min_distortion_confidence]
-    axes[2, 3].bar(digits, min_distortion_confidence, color=bar_colors)
+        axes[2, 3].set_title("Confidence Scores (%)")
+        bar_colors = ['blue'] * 10
+        bar_colors[original_label[0]] = 'green'
+        bar_colors[target_label[0]] = 'red'
+        min_distortion_confidence = [v * 100 for v in min_distortion_confidence]
+        axes[2, 3].bar(digits, min_distortion_confidence, color=bar_colors)
 
-    fig.tight_layout()
-    fig.subplots_adjust(hspace=0.5)
+        fig.tight_layout()
+        fig.subplots_adjust(hspace=0.5)
 
-    legend_frame = Frame(root, bd=2, background="white", relief="sunken")
-    legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
-    legend_label.pack(pady=2)
-    legend_frame.pack(expand=True, side="bottom",fill="x")
+        #display_frame = Frame(root, background="white", relief="sunken")
 
-    canvas = FigureCanvasTkAgg(fig, master=root)
-    canvas.draw()
-    canvas.get_tk_widget().pack(side="top", fill="x")
+        canvas = FigureCanvasTkAgg(fig, master=display_frame)
+        canvas.draw()
+
+        legend_frame = Frame(display_frame, bd=2, background="white")#, relief="sunken")
+        legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
+
+        canvas.get_tk_widget().pack(side="top", fill="both")
+        legend_label.pack(pady=2)
+        legend_frame.pack(side="bottom",fill="both", expand=True)
+    
+    #display_frame.update_idletasks()
+
+    display_frame.pack(fill="both", expand=True)
+
+    
 
     
 
@@ -619,7 +640,7 @@ def main():
         success_frame.pack(expand=True, fill="both")
 
         plt.clf()  
-        legend_frame = Frame(root, background="white", relief="sunken")
+        legend_frame = Frame(success_frame, background="white")#, relief="sunken")
         legend_label = Label(legend_frame, text="Green: Source Class         Red: Target Class         Blue: Other Classes", bg="white", fg="black", font=("Arial", 25, "bold"))
         legend_label.pack()
         legend_frame.pack(expand=True, side="bottom",fill="both")
