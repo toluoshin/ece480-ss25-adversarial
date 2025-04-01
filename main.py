@@ -631,7 +631,9 @@ def main():
                   bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
         reset_btn.pack(pady=5)#, expand=True, fill="y")
 
-        success_text = "Attack success!"
+        distortion = tf.reduce_sum(abs(original - adversarial)) / float(784)
+
+        success_text = f"Attack success!\nInput feature distortion: {round(float(distortion.numpy()*100), 2)}%"
         if (adv_pred != target_label):
             success_text = "Attack was not successful."
         success_frame = Frame(root, bd=2, background="white", relief="sunken")
