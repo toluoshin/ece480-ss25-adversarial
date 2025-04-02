@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import tkinter as tk
+import os
+from tkinter import messagebox
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import *
@@ -494,8 +496,8 @@ def main():
         print(f"Adversarial example generation took {(end - start):.3f} seconds.")
 
         # Get predictions
-        original_pred, original_probs = predict_sample(model, sample_image)
-        adv_pred, adv_probs = predict_sample(model, adversarial_image)
+        original_pred, original_probs = predict_sample(interpreter, sample_image)
+        adv_pred, adv_probs = predict_sample(interpreter, adversarial_image)
 
         # Print predictions
         print(f"\nOriginal Prediction: {original_pred}")
@@ -528,7 +530,7 @@ def main():
     def iteration_test(model, processed_image, target_label, root):
 
         # Get prediction for original image
-        original_pred, original_probs = predict_sample(model, processed_image)
+        original_pred, original_probs = predict_sample(interpreter, processed_image)
         print("\nOriginal Prediction:")
         print(f"Predicted digit: {original_pred}")
         print("\nTop 3 probabilities:")
@@ -547,8 +549,8 @@ def main():
                                                                     target_label, epsilon, 150, convolutional)
             #print(num_pixels_changed)
             # Get prediction for adversarial image
-            original_pred, original_probs = predict_sample(model, processed_image)
-            adv_pred, adv_probs = predict_sample(model, adversarial_image)
+            original_pred, original_probs = predict_sample(interpreter, processed_image)
+            adv_pred, adv_probs = predict_sample(interpreter, adversarial_image)
 
             success = 1 if adv_pred == target_label else 0
             distortion = 0
@@ -765,15 +767,25 @@ def main():
 
     # Model and parameters
     model = None
+    interpreter = None
     convolutional = None
     train_model = None
     baseline_accuracy = 0
+
+    def load_tflite_model(model_path):
+        interpreter = tf.lite.Interpreter(model_path=model_path)
+        interpreter.allocate_tensors()
+        return interpreter
     
     def initialize_model():
         # Parameters
         # convolutional = False    # True: CNN, False: MLP
         # train_model = False       # True: training model, False: loading model
-        nonlocal x_train, x_test, convolutional, train_model, model, baseline_accuracy
+        nonlocal x_train, x_test, convolutional, train_model, model, baseline_accuracy, interpreter
+
+        model_name = 'cnn_model' if convolutional else 'mlp_model'
+        keras_model_path = f'{model_name}.keras'
+        tflite_model_path = f'{model_name}.tflite'
 
         if convolutional:
             x_train = x_train.reshape((-1,28,28,1))
@@ -794,27 +806,35 @@ def main():
                 tf.keras.layers.Flatten(),
                 tf.keras.layers.Dense(128, activation='relu'),
                 tf.keras.layers.Dense(10, activation='softmax')])
-                model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-                model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
-                model.save('cnn_model.keras')
             else:
                 model = tf.keras.Sequential([
                     tf.keras.layers.Input(shape=(784,)),
                     tf.keras.layers.Dense(128, activation='relu'),
                     tf.keras.layers.Dense(10, activation='softmax')
                 ])
-                model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-                model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
-                model.save('mlp_model.keras')
-        else:
-            # Load the model
-            print("Loading the model...")
-            if convolutional:
-                model = tf.keras.models.load_model('cnn_model.keras')
-            else:
-                model = tf.keras.models.load_model('mlp_model.keras')
 
-        baseline_accuracy = model.evaluate(x_test, y_test)[1]
+            model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+            model.fit(x_train, y_train, epochs=10, batch_size=32, verbose=1)
+            model.save(keras_model_path)
+
+            # Convert to TFLite
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
+            tflite_model = converter.convert()
+            with open(tflite_model_path, 'wb') as f:
+                f.write(tflite_model)
+
+        if not train_model and not os.path.exists(tflite_model_path):
+            if os.path.exists(keras_model_path):
+                keras_model = tf.keras.models.load_model(keras_model_path)
+                converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
+                tflite_model = converter.convert()
+                with open(tflite_model_path, 'wb') as f:
+                    f.write(tflite_model)
+
+        print("Loading TFLite model...")
+        interpreter = load_tflite_model(tflite_model_path)
+
+        baseline_accuracy = model.evaluate(x_test, y_test)[1] if train_model else 0.0
         print("Model baseline accuracy: ", baseline_accuracy) 
         # Show model architecture
         # model.summary()
@@ -1126,8 +1146,8 @@ def main():
             # attack_header_label = Label(attack_header_frame, text="Live Adversarial Attack Visualization", bg ="gray", fg="black", font=("Arial", 25, "bold"))
             # attack_header_label.pack()
             # attack_header_frame.pack()
-            pred, probs = predict_sample(model, input_image)
-            iteration_test(model, input_image, target, attack_panel)
+            pred, probs = predict_sample(interpreter, input_image)
+            iteration_test(interpreter, input_image, target, attack_panel)
 
         def run_specific_attack(target, epsilon):
             nonlocal input_image
