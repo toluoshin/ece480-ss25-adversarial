@@ -1406,6 +1406,15 @@ def main():
                                 # PUT CODE HERE: take picture and save to digit path
                                 # ....................
                                 print("Digit picture taken!")
+                                # do subtraction and save
+                                base_img = Image.open(base_path).convert('L')
+                                number_img = Image.open(digit_path).convert('L')
+                                subtracted_img = ImageChops.subtract(number_img, base_img)
+                                subtracted_img.save('subtracted_img.png')
+
+                                # Process image
+                                input_image = preprocess_uploaded_image('subtracted_img.png', convolutional)
+                                display_input_image(input_panel)
                     update()
                 
                 # start first countdown
@@ -1432,16 +1441,6 @@ def main():
 
             # run window
             countdown_window.mainloop()
-
-            # do subtraction and save
-            base_img = Image.open(base_path).convert('L')
-            number_img = Image.open(digit_path).convert('L')
-            subtracted_img = ImageChops.subtract(number_img, base_img)
-            subtracted_img.save('subtracted_img.png')
-
-            # Process image
-            input_image = preprocess_uploaded_image('subtracted_img.png', convolutional)
-            display_input_image(input_panel)
         
 
     def display_input_image(input_panel):
