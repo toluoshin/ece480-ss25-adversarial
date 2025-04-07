@@ -541,15 +541,31 @@ def main():
         for digit, prob in zip(top3, original_probs[top3]):
             print(f"Digit {digit}: {prob * 100:.2f}%")
 
+        clear_screen(root)
+
+        # create progress bar
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("Custom.Horizontal.TProgressbar", throughcolor='gray', background='#606060')
+        progress_bar = ttk.Progressbar(length=root.winfo_width(), maximum=10, master=root, style="Custom.Horizontal.TProgressbar")
+        progress_bar.pack()
+
+        # live attack frame 
+        live_attack_frame = Frame(root, bd=2, background="white")
+        live_attack_frame.pack(expand=True, fill="both")
+        
         # Iterate over values
         success_rates = []
         for epsilon in np.arange(0.1, 1.1, 0.1):
+            
             #print(f"Testing epsilon={epsilon:.1f}, Top N={top_n}")
             print(f"Testing epsilon={epsilon:.1f}")
             #adversarial_image, num_pixels_changed = create_adversarial_example_saliency(tab1, model, processed_image, original_pred,
             #                                                        target_label, epsilon, 150, convolutional)
-            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(root, model, processed_image, original_pred,
+            adversarial_image, num_pixels_changed = create_adversarial_example_saliency(live_attack_frame, model, processed_image, original_pred,
                                                                     target_label, epsilon, 150, convolutional)
+            #progress_bar.step((epsilon-0.1)*100 - .1)
+            progress_bar.step(0.99)
             #print(num_pixels_changed)
             # Get prediction for adversarial image
             # original_pred, original_probs = predict_sample(interpreter, processed_image)
@@ -581,15 +597,15 @@ def main():
                   bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 30, "bold"))
         reset_btn.pack(pady=5)#, expand=True, fill="y")
         
-        # style = ttk.Style()
-        # style.theme_use('default')
+        style_tab = ttk.Style()
+        style_tab.theme_use('default')
 
         # # # Use the default "gray" color
-        # style.configure('TNotebook', background='gray')              # Tab bar background
-        # style.configure('TNotebook.Tab', background='gray')          # Inactive tabs
-        # style.map('TNotebook.Tab', background=[('selected', 'light gray')])  # Selected tab
+        style_tab.configure('TNotebook', background='gray')              # Tab bar background
+        style_tab.configure('TNotebook.Tab', background='gray')          # Inactive tabs
+        style_tab.map('TNotebook.Tab', background=[('selected', 'light gray')])  # Selected tab
 
-        tabControl = ttk.Notebook(root)
+        tabControl = ttk.Notebook(root, style='TNotebook')
 
         #tab1 = ttk.Frame(tabControl)
         tab2 = Frame(tabControl, background="gray")

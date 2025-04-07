@@ -124,6 +124,7 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     ctr = 0
     
     # clear root
+    # if not iterate:
     for widget in root.winfo_children():
         widget.destroy()
     
@@ -237,6 +238,9 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
         #print("top_2_indices:", top_2_indices)
 
         if top_2_indices[0] == 0:       # this basically means that there are no more salient pixels to choose from, aka the model was unable to make an adversarial example
+            # if iterate:
+            #     for widget in root.winfo_children():
+            #         widget.destroy()
             return adversarial_image, 0
 
         for pix in top_2_indices:
@@ -269,6 +273,9 @@ def create_adversarial_example_gradual(root, model, input_image, input_label, ta
     #plt.ioff()
     # plt.show()
     #plt.close(fig)
+    # if iterate:
+    #     for widget in root.winfo_children():
+    #         widget.destroy()
     return adversarial_image, pix_num
 
 def create_adversarial_example_burst(model, input_image, input_label, target_label, epsilon=0.1, top_n=5):
