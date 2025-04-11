@@ -20,10 +20,10 @@ This project demonstrates the vulnerability of deep learning models to adversari
 ## Installation
 ```bash
 # Clone the repository
-git clone https://github.com/mchapaton/adversarial-attack.git
+git clone https://github.com/toluoshin/ece480-ss25-adversarial.git
 
 # Navigate to the project directory
-cd adversarial-attack
+cd ece480-ss25-adversarial
 
 # Install required dependencies
 pip3 install tensorflow numpy matplotlib pillow
@@ -70,20 +70,24 @@ The system offers four main options:
 ## Hardware Setup
 For the demonstration setup:
 - Raspberry Pi 5
+  - Camera Module
+- Chalk Board
 - Wacom Drawing Tablet
 - 2x Portable Monitors
 
 ## Contributing
-This project was developed as part of the ECE Senior Design course at Michigan State University. While we're not actively maintaining it past FS24, feel free to fork and extend the project.
+This project was developed as part of the ECE Senior Design course at Michigan State University. While we're not 
+actively maintaining it past the 2025 spring semester, feel free to fork and extend the project.
 
-## Team Members
-- Rashed Almualla - Document Prep, Software
-- Mathieu Chapaton - Management, Software
-- Blake Morris - Lab Coordinator, Software/Hardware
-- Faris Sweis - Presentation Prep, Software/Hardware
+## Team Members and Roles
+- Christopher Dadisho - Document Handler, Software & GUI Development
+- Someshwar Maji - Presentatiopn Handler, System Integration & Embedded Programming
+- Toluwani Oshin - Manager, Adversarial Attack Development & Software Testing
+- Justin Skipper - Online Coordinator, Computer Vision & Image Processing
+- Owen Wurzer - Product Demo Manager, Hardware & Embedded Systems
 
 ## Acknowledgments
-- Prof. Jian Ren - Project Facilitator
-- Prof. Subir Biswas - Course Professor
+- Prof. Jian Ren and Prof. Tongtong Li - Course Professors
+- Prof. Daniel Morris - Project Facilitator
 - Based on research paper: "The Limitations of Deep Learning in Adversarial Settings" (2016)
 - MNIST Dataset
