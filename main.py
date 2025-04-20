@@ -1538,7 +1538,7 @@ def main():
 
         reset_btn = Button(input_panel, text="Reset Image", command=lambda: load_menu(),
                   bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 20, "bold"))
-        reset_btn.pack(side='bottom', anchor='s', fill='x')
+        reset_btn.pack(pady = 5, padx = 5, side='bottom', anchor='s', fill='x')
 
     def first_load_menu(conv, train):
         nonlocal convolutional, train_model
