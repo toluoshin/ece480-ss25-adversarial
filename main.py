@@ -42,6 +42,25 @@ NavigationToolbar2Tk)
 #     sample_idx = np.random.choice(digit_indices)
 #     return x_test[sample_idx:sample_idx + 1], y_test[sample_idx:sample_idx + 1]
 
+'''def predict_tflite_sample(interpreter, image):
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Handle reshaping for CNN vs MLP
+    if len(image.shape) == 2:
+        image = image.reshape(1, 28, 28, 1)  # For CNN
+    elif len(image.shape) == 3:
+        image = np.expand_dims(image, 0)
+    elif len(image.shape) == 1:
+        image = image.reshape(1, 784)  # For MLP
+
+    image = image.astype(np.float32)
+    interpreter.set_tensor(input_details[0]['index'], image)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_details[0]['index'])[0]
+
+    predicted_digit = int(np.argmax(output))
+    return predicted_digit, output'''
 
 def preprocess_uploaded_image(image_path, convolutional):
     """
@@ -496,8 +515,8 @@ def main():
         print(f"Adversarial example generation took {(end - start):.3f} seconds.")
 
         # Get predictions
-        # original_pred, original_probs = predict_sample(interpreter, sample_image)
-        # adv_pred, adv_probs = predict_sample(interpreter, adversarial_image)
+        # original_pred, original_probs = predict_tflite_sample(interpreter, sample_image)
+        # adv_pred, adv_probs = predict_tflite_sample(interpreter, adversarial_image)
         original_pred, original_probs = predict_sample(model, sample_image)
         adv_pred, adv_probs = predict_sample(model, adversarial_image)
 
@@ -532,7 +551,7 @@ def main():
     def iteration_test(model, processed_image, target_label, root):
 
         # Get prediction for original image
-        #original_pred, original_probs = predict_sample(interpreter, processed_image)
+        #original_pred, original_probs = predict_tflite_sample(interpreter, processed_image)
         original_pred, original_probs = predict_sample(model, processed_image)
         print("\nOriginal Prediction:")
         print(f"Predicted digit: {original_pred}")
@@ -568,8 +587,8 @@ def main():
             progress_bar.step(0.99)
             #print(num_pixels_changed)
             # Get prediction for adversarial image
-            # original_pred, original_probs = predict_sample(interpreter, processed_image)
-            # adv_pred, adv_probs = predict_sample(interpreter, adversarial_image)
+            # original_pred, original_probs = predict_tflite_sample(interpreter, processed_image)
+            # adv_pred, adv_probs = predict_tflite_sample(interpreter, adversarial_image)
             original_pred, original_probs = predict_sample(model, processed_image)
             adv_pred, adv_probs = predict_sample(model, adversarial_image)
 
@@ -789,6 +808,7 @@ def main():
     # Model and parameters
     model = None
     #interpreter = None
+    #use_tflite = True
     convolutional = None
     train_model = None
     baseline_accuracy = 0
@@ -807,7 +827,7 @@ def main():
 
         model_name = 'cnn_model' if convolutional else 'mlp_model'
         keras_model_path = f'{model_name}.keras'
-        #tflite_model_path = f'{model_name}.tflite'
+        tflite_model_path = f'{model_name}.tflite'
 
         if convolutional:
             x_train = x_train.reshape((-1,28,28,1))
@@ -840,10 +860,18 @@ def main():
             model.save(keras_model_path)
 
             # Convert to TFLite
-            # converter = tf.lite.TFLiteConverter.from_keras_model(model)
-            # tflite_model = converter.convert()
-            # with open(tflite_model_path, 'wb') as f:
-            #     f.write(tflite_model)
+            try:
+                print("Converting to TFLite...")
+                converter = tf.lite.TFLiteConverter.from_keras_model(model)
+                tflite_model = converter.convert()
+                with open(tflite_model_path, 'wb') as f:
+                    f.write(tflite_model)
+                print(f"TFLite model saved to {tflite_model_path}")
+            except Exception as e:
+                print(f"Failed to convert to TFLite: {e}")
+
+            # if use_tflite:
+            #     load_tflite_model(tflite_model_path)
 
         # if not train_model and not os.path.exists(tflite_model_path):
         #     # if os.path.exists(keras_model_path):
@@ -1173,7 +1201,7 @@ def main():
             # attack_header_label = Label(attack_header_frame, text="Live Adversarial Attack Visualization", bg ="gray", fg="black", font=("Arial", 25, "bold"))
             # attack_header_label.pack()
             # attack_header_frame.pack()
-            # pred, probs = predict_sample(interpreter, input_image)
+            # pred, probs = predict_tflite_sample(interpreter, input_image)
             # iteration_test(interpreter, input_image, target, attack_panel)
             pred, probs = predict_sample(model, input_image)
             iteration_test(model, input_image, target, attack_panel)
@@ -1186,6 +1214,8 @@ def main():
             # attack_header_label = Label(attack_header_frame, text="Live Adversarial Attack Visualization", bg ="gray", fg="black", font=("Arial", 25, "bold"))
             # attack_header_label.pack()
             # attack_header_frame.pack()
+            # pred, probs = predict_tflite_sample(interpreter, input_image)
+            # iteration_test(interpreter, input_image, pred, target, epsilon, attack_panel)
             pred, probs = predict_sample(model, input_image)
             specific_test(model, input_image, pred, target, epsilon, attack_panel)
 
@@ -1521,7 +1551,7 @@ def main():
         # def on_radio_change():
         #     convolutional = convo_var.get()
         #     train_model = train_var.get()
-        
+
         clear_screen(root)
 
         welcome_screen_frame = Frame(root, bg="gray", bd=2, relief='sunken')
