@@ -1318,9 +1318,9 @@ def main():
                                      justify="center", background="gray", fg="black")#.grid(column=0, row=0)
         instruction_label.pack(pady=5)
         iterate_var = tk.BooleanVar(value = False)
-        radio_specific = Radiobutton(iterate_option_frame, text="Test specific epsilon", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
+        radio_specific = Radiobutton(iterate_option_frame, text="Fixed-Epsilon Attack", variable=iterate_var, value=False, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_specific.pack()
-        radio_iterate = Radiobutton(iterate_option_frame, text="Iterate through epsilons", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
+        radio_iterate = Radiobutton(iterate_option_frame, text="Iteratative-Epsilon Attack", variable=iterate_var, value=True, bg="gray", fg="black", font=("Arial", 20, "bold"), command=on_radio_change)
         radio_iterate.pack()
         parameter_select_frame = Frame(parameter_panel, relief="sunken", bd=2, background="gray")
         parameter_select_frame.pack(expand=True,fill="both")
@@ -1505,6 +1505,10 @@ def main():
         axes.set_title(f"Input Image")
         axes.axis('off')
         im = axes.imshow(input_image.reshape(28, 28), cmap='gray')
+
+        reset_btn = Button(input_panel, text="Reset Image", command=lambda: load_menu(),
+                  bg="white", fg="black", bd=2, highlightthickness=0, relief="solid", font=("Arial", 20, "bold"))
+        reset_btn.pack(side='bottom', anchor='s', fill='x')
 
     def first_load_menu(conv, train):
         nonlocal convolutional, train_model
