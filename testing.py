@@ -167,13 +167,26 @@ classes = [str(i) for i in range(10)]
 plt.figure(figsize=(10, 8))
 ax = sns.heatmap(success_percent, annot=False, fmt=".0f", cmap="YlOrRd", xticklabels=classes, yticklabels=classes, vmin=0, vmax=100, cbar_kws={'label': 'Success Rate (%)'})
 ax.invert_yaxis()
+cbar = ax.collections[0].colorbar
+cbar.set_label('Success Rate (%)', fontsize=30)
+cbar.ax.tick_params(labelsize=20)
 # Force color bar range from 0 to 100
 #ax.collections[0].colorbar.set_clim(0, 100)
 
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=30)
+ax.set_yticklabels(ax.get_yticklabels(), fontsize=30)
+ax.set_xlabel("Source Class", fontsize=30)
+ax.set_ylabel("Target Class", fontsize=30)
+
 # Labels and titles
-plt.xlabel("Source Class")
-plt.ylabel("Target Class")
-plt.title("Adversarial Attack Success Rate (%)") #\n(25 attempts per pair)"
+# plt.xlabel("Source Class")
+# plt.ylabel("Target Class")
+if convolutional:
+    #plt.title("CNN Adversarial Attack Success Rate (%)") #\n(25 attempts per pair)"
+    ax.set_title("CNN Adversarial Attack Success Rate", fontsize=30, pad=15)
+else:
+    # plt.title("MLP Adversarial Attack Success Rate (%)") #\n(25 attempts per pair)"
+    ax.set_title("MLP Adversarial Attack Success Rate", fontsize=30, pad=15)
 plt.tight_layout()
 plt.show()
 
